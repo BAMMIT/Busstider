@@ -1,7 +1,5 @@
-// Vi tar bort API_KEY här helt
-// Widgeten hämtar nu via proxy (kommer snart)
+const API_KEY = "d04e6df880fd4f33bd14a706425b0994"; // Byt mot din nyckel
 
-// Stopp hämtas från URL: ?stop=740025756,740074894
 function getParams() {
     const params = new URLSearchParams(window.location.search);
     return {
@@ -49,11 +47,11 @@ function buildRow(item) {
     `;
 }
 
-// Hämta data via proxy
 async function fetchStop(stopId) {
-    const proxyUrl = `https://billowing-paper-c04c.mr-joakim-bang.workers.dev/`;
-    const response = await fetch(proxyUrl);
-    return response.json();
+    const endpoint = `https://realtime-api.trafiklab.se/v1/arrivals/${stopId}?key=${API_KEY}`;
+    const arrivals = await (await fetch(endpoint)).json();
+    const departures = await (await fetch(`https://realtime-api.trafiklab.se/v1/departures/${stopId}?key=${API_KEY}`)).json();
+    return { stops: arrivals.stops, arrivals: arrivals.arrivals, departures: departures.departures };
 }
 
 async function loadData() {
@@ -66,18 +64,15 @@ async function loadData() {
 
         try {
             const data = await fetchStop(stop);
-
             const stopName = data.stops[0]?.name || "Hållplats";
 
             let html = `<div class="stop-card"><div class="stop-header">Ankomster & Avgångar – ${stopName}</div>`;
 
-            // Ankomster
             html += `<div class="column-title">Ankomster</div>`;
-            data.arrivals.slice(0, 6).forEach(item => html += buildRow(item));
+            data.arrivals.slice(0,6).forEach(item => html += buildRow(item));
 
-            // Avgångar
             html += `<div class="column-title">Avgångar</div>`;
-            data.departures.slice(0, 6).forEach(item => html += buildRow(item));
+            data.departures.slice(0,6).forEach(item => html += buildRow(item));
 
             html += `</div>`;
             container.innerHTML += html;
