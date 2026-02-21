@@ -1,18 +1,8 @@
 const API_KEY = "d04e6df880fd4f33bd14a706425b0994"; // Byt mot din nyckel
 
 const options = [
-    { // Alternativ 1: närmre hållplats med byte
-        name: "Alternativ 1 (byte)",
-        start: "740074894",
-        via: "740072181",
-        direct: false
-    },
-    { // Alternativ 2: längre hållplats, direkt
-        name: "Alternativ 2 (direkt)",
-        start: "740025756",
-        via: null,
-        direct: true
-    }
+    { name: "Alternativ 1 (byte)", start: "740074894", via: "740072181", direct: false },
+    { name: "Alternativ 2 (direkt)", start: "740025756", via: null, direct: true }
 ];
 
 function formatTime(dateString) {
@@ -55,10 +45,10 @@ function buildRow(item) {
     `;
 }
 
-async function fetchStop(stopId, type) {
-    const endpoint = `https://realtime-api.trafiklab.se/v1/${type}/${stopId}?key=${API_KEY}`;
-    const response = await fetch(endpoint);
-    return response.json();
+async function fetchStop(stopId) {
+    const arrivals = await (await fetch(`https://realtime-api.trafiklab.se/v1/arrivals/${stopId}?key=${API_KEY}`)).json();
+    const departures = await (await fetch(`https://realtime-api.trafiklab.se/v1/departures/${stopId}?key=${API_KEY}`)).json();
+    return { stops: arrivals.stops, arrivals: arrivals.arrivals, departures: departures.departures };
 }
 
 async function loadData() {
@@ -67,25 +57,24 @@ async function loadData() {
 
     for (const opt of options) {
         try {
-            const arrivalsData = await fetchStop(opt.start, "arrivals");
-            const departuresData = await fetchStop(opt.start, "departures");
-
-            const stopName = arrivalsData.stops[0]?.name || "Hållplats";
+            const data = await fetchStop(opt.start);
+            const stopName = data.stops[0]?.name || "Hållplats";
 
             let html = `<div class="stop-card"><div class="stop-header">${opt.name} – ${stopName}</div><div class="columns">`;
 
             // Ankomster vänster
             html += `<div><div class="column-title">Ankomster</div>`;
-            arrivalsData.arrivals.slice(0, 6).forEach(item => { html += buildRow(item); });
+            data.arrivals.slice(0,6).forEach(item => html += buildRow(item));
             html += `</div>`;
 
             // Avgångar höger
             html += `<div><div class="column-title">Avgångar</div>`;
-            departuresData.departures.slice(0, 6).forEach(item => { html += buildRow(item); });
+            data.departures.slice(0,6).forEach(item => html += buildRow(item));
             html += `</div>`;
 
             html += `</div></div>`;
             container.innerHTML += html;
+
         } catch {
             container.innerHTML += `<div class="stop-card">Kunde inte hämta ${opt.name}</div>`;
         }
