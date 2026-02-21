@@ -1,4 +1,3 @@
-/* Grundläggande stil för båda sidor */
 body {
     margin: 0;
     font-family: system-ui, sans-serif;
@@ -64,7 +63,6 @@ body {
     margin-top: 10px;
 }
 
-/* Grid för avancerad sida */
 .columns {
     display: grid;
     grid-template-columns: 1fr 1fr;
@@ -72,9 +70,7 @@ body {
 }
 
 @media (max-width: 768px) {
-    .columns {
-        grid-template-columns: 1fr;
-    }
+    .columns { grid-template-columns: 1fr; }
 }
 
 .column-title {
