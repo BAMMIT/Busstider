@@ -1,32 +1,30 @@
 const API_KEY = "d04e6df880fd4f33bd14a706425b0994"; // Sätt din nyckel här
 const LINE_ID = "901";
 
-// Ladda statiska hållplatser
 async function loadTrips() {
     const res = await fetch("data/trips-901.json");
     return await res.json();
 }
 
-// Hämta realtidsdata för linje 901
+// Realtidsdata från Trafiklab
 async function fetchRealtimeBuses() {
-    const url = `https://api.trafiklab.se/v1/realtime/vehiclemonitoring?key=${API_KEY}&lineRef=${LINE_ID}`;
+    const url = `https://realtime-api.trafiklab.se/v1/vehiclepositions?key=${API_KEY}&lineRef=${LINE_ID}`;
     try {
         const res = await fetch(url);
         const data = await res.json();
-        // Transformera till array med lastStopId / nextStopId / directionId
-        return data.vehiclePositions.map(v => ({
+        // Transformera till buss-objekt: vehicleRef, directionId, lastStopId, nextStopId
+        return data.vehicles.map(v => ({
             vehicleRef: v.vehicleRef,
             directionId: v.directionId,
             lastStopId: v.lastStopId,
             nextStopId: v.nextStopId
         }));
     } catch(e) {
-        console.error("Realtidsdata misslyckades", e);
+        console.error("Misslyckades hämta realtidsdata", e);
         return [];
     }
 }
 
-// Rita hållplatser
 function drawStops(trips, container) {
     const height = 500;
     const idsKarlstad = trips[0].calls.map(c => c.stop.id);
@@ -47,7 +45,6 @@ function drawStops(trips, container) {
     });
 }
 
-// Placera bussar
 function placeBuses(trips, buses, container) {
     const height = 500;
     buses.forEach(bus => {
@@ -60,7 +57,8 @@ function placeBuses(trips, buses, container) {
         const prevIndex = calls.findIndex(c => c.stop.id === bus.lastStopId);
         const nextIndex = calls.findIndex(c => c.stop.id === bus.nextStopId);
         const step = height / (calls.length - 1);
-        const pos = prevIndex === -1 || nextIndex === -1 ? 0 : step * (prevIndex + 0.5);
+        const ratio = 0.5;
+        const pos = (prevIndex >= 0 && nextIndex >= 0) ? step * (prevIndex + ratio) : 0;
 
         const busDiv = document.createElement("div");
         busDiv.className = bus.directionId === 1 ? "bus bus-left" : "bus bus-right";
@@ -70,7 +68,6 @@ function placeBuses(trips, buses, container) {
     });
 }
 
-// Render-loop
 async function renderLine() {
     const container = document.getElementById("line-container");
     container.innerHTML = '<div class="line" id="line"></div>';
