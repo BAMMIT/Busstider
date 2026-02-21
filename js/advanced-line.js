@@ -1,33 +1,25 @@
 const API_KEY = "d04e6df880fd4f33bd14a706425b0994"; // Sätt din nyckel här
-const LINE_ID = "901"; // Linjen du vill följa
+const LINE_ID = "901"; // Linje 901
 
-// Ladda statiska hållplatser
-async function loadStops() {
-    const resp = await fetch("data/trips-901.json");
-    return await resp.json(); // Array med direction + calls
+async function loadTrips() {
+    const res = await fetch("data/trips-901.json");
+    return await res.json();
 }
 
-// Hämta realtidsdata för linjen
-async function fetchRealtime() {
-    try {
-        const url = `https://api.trafiklab.se/v1/realtime/vehiclemonitoring?key=${API_KEY}&lineRef=${LINE_ID}`;
-        const resp = await fetch(url);
-        const data = await resp.json();
-        // Returnera array med bussar: {vehicleRef, lat, lon, directionId, lastStopId, nextStopId}
-        return data.vehiclePositions || [];
-    } catch (e) {
-        console.warn("Realtidsdata misslyckades:", e);
-        return [];
-    }
+// Dummy-funktion för realtidsbussar – ersätt med Trafiklab API
+async function fetchRealtimeBuses() {
+    // Exempel med två bussar
+    return [
+        { vehicleRef: "901-1", directionId: 1, lastStopId: "740022236", nextStopId: "740035993" },
+        { vehicleRef: "901-2", directionId: 2, lastStopId: "740022299", nextStopId: "740075537" }
+    ];
 }
 
-// Rita linje och hållplatser
-function drawLine(stops, container) {
-    container.innerHTML = "";
+function drawLine(trip, container) {
     const height = 500;
-    const step = height / (stops.length - 1);
+    const step = height / (trip.calls.length - 1);
 
-    stops.forEach((stop, i) => {
+    trip.calls.forEach((stop, i) => {
         const stopDiv = document.createElement("div");
         stopDiv.className = "stop";
         stopDiv.style.top = `${i * step}px`;
@@ -38,21 +30,19 @@ function drawLine(stops, container) {
     return step;
 }
 
-// Placera bussar på linjen
-function placeBuses(trips, step, buses, container) {
+function placeBuses(trips, buses, container) {
     buses.forEach(bus => {
-        // Hitta rätt direction
-        const trip = trips.find(t => bus.directionId === 1 ? t.direction.includes("→ Karlstad") : t.direction.includes("→ Lövnäs"));
+        const trip = bus.directionId === 1 
+            ? trips.find(t => t.direction.includes("→ Karlstad"))
+            : trips.find(t => t.direction.includes("→ Lövnäs"));
+
         if (!trip) return;
-
         const calls = trip.calls;
-        let prevIndex = calls.findIndex(c => c.stop.id === bus.lastStopId);
-        let nextIndex = calls.findIndex(c => c.stop.id === bus.nextStopId);
+        const prevIndex = calls.findIndex(c => c.stop.id === bus.lastStopId);
+        const nextIndex = calls.findIndex(c => c.stop.id === bus.nextStopId);
+        const step = 500 / (calls.length - 1);
 
-        if (prevIndex === -1) prevIndex = 0;
-        if (nextIndex === -1) nextIndex = calls.length - 1;
-
-        const ratio = 0.5; // Vi kan approximera mitten mellan hållplatser
+        const ratio = 0.5; // Buss mitt mellan hållplatser
         const pos = step * (prevIndex + ratio);
 
         const busDiv = document.createElement("div");
@@ -62,19 +52,17 @@ function placeBuses(trips, step, buses, container) {
     });
 }
 
-// Huvudfunktion
-async function showLine() {
-    const container = document.getElementById("line");
-    const trips = await loadStops();
-    const buses = await fetchRealtime();
+async function renderLine() {
+    const container = document.getElementById("line-container");
+    container.innerHTML = '<div class="line" id="line"></div>';
 
-    // Rita båda riktningar separat
-    trips.forEach(trip => {
-        const step = drawLine(trip.calls, container);
-        placeBuses(trips, step, buses, container);
-    });
+    const trips = await loadTrips();
+    const buses = await fetchRealtimeBuses();
 
-    setTimeout(showLine, 30000); // Uppdatera var 30:e sekund
+    trips.forEach(trip => drawLine(trip, container));
+    placeBuses(trips, buses, container);
+
+    setTimeout(renderLine, 30000);
 }
 
-showLine();
+renderLine();
