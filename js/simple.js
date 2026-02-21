@@ -1,10 +1,11 @@
-const API_KEY = "d04e6df880fd4f33bd14a706425b0994"; // Byt mot din nyckel
+// Vi tar bort API_KEY här helt
+// Widgeten hämtar nu via proxy (kommer snart)
 
+// Stopp hämtas från URL: ?stop=740025756,740074894
 function getParams() {
     const params = new URLSearchParams(window.location.search);
     return {
-        stops: (params.get("stop") || "").split(","),
-        type: params.get("type") || "arrivals"
+        stops: (params.get("stop") || "").split(",")
     };
 }
 
@@ -48,28 +49,39 @@ function buildRow(item) {
     `;
 }
 
+// Hämta data via proxy
+async function fetchStop(stopId) {
+    const proxyUrl = `https://billowing-paper-c04c.mr-joakim-bang.workers.dev/`;
+    const response = await fetch(proxyUrl);
+    return response.json();
+}
+
 async function loadData() {
-    const { stops, type } = getParams();
+    const { stops } = getParams();
     const container = document.getElementById("app");
     container.innerHTML = "";
 
     for (const stop of stops) {
         if (!stop) continue;
+
         try {
-            const endpoint = `https://realtime-api.trafiklab.se/v1/${type}/${stop}?key=${API_KEY}`;
-            const response = await fetch(endpoint);
-            const data = await response.json();
+            const data = await fetchStop(stop);
+
             const stopName = data.stops[0]?.name || "Hållplats";
 
-            let html = `<div class="stop-card"><div class="stop-header">${type === "arrivals" ? "Ankomster" : "Avgångar"} – ${stopName}</div>`;
+            let html = `<div class="stop-card"><div class="stop-header">Ankomster & Avgångar – ${stopName}</div>`;
 
-            const list = type === "arrivals" ? data.arrivals : data.departures;
-            list.slice(0, 8).forEach(item => {
-                html += buildRow(item);
-            });
+            // Ankomster
+            html += `<div class="column-title">Ankomster</div>`;
+            data.arrivals.slice(0, 6).forEach(item => html += buildRow(item));
+
+            // Avgångar
+            html += `<div class="column-title">Avgångar</div>`;
+            data.departures.slice(0, 6).forEach(item => html += buildRow(item));
 
             html += `</div>`;
             container.innerHTML += html;
+
         } catch {
             container.innerHTML += `<div class="stop-card">Kunde inte hämta hållplats ${stop}</div>`;
         }
