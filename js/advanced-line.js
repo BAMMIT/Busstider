@@ -6,22 +6,25 @@ async function loadTrips() {
     return await res.json();
 }
 
-// Dummy-funktion för realtidsbussar – ersätt med Trafiklab API
+// Dummy realtidsdata – ersätt med Trafiklab API i produktion
 async function fetchRealtimeBuses() {
-    // Exempel med två bussar
     return [
         { vehicleRef: "901-1", directionId: 1, lastStopId: "740022236", nextStopId: "740035993" },
         { vehicleRef: "901-2", directionId: 2, lastStopId: "740022299", nextStopId: "740075537" }
     ];
 }
 
-function drawLine(trip, container) {
+function drawStops(trip, container, indexMap) {
     const height = 500;
-    const step = height / (trip.calls.length - 1);
-
+    const step = height / Math.max(...trip.calls.map((_, i) => i));
+    
     trip.calls.forEach((stop, i) => {
+        // Avgör position: vänster, center, höger
+        let side = "center"; 
+        if (!indexMap.other.includes(stop.stop.id)) side = trip.direction.includes("→ Karlstad") ? "left" : "right";
+
         const stopDiv = document.createElement("div");
-        stopDiv.className = "stop";
+        stopDiv.className = `stop ${side}`;
         stopDiv.style.top = `${i * step}px`;
         stopDiv.innerText = stop.stop.name;
         container.appendChild(stopDiv);
@@ -31,23 +34,24 @@ function drawLine(trip, container) {
 }
 
 function placeBuses(trips, buses, container) {
+    const height = 500;
     buses.forEach(bus => {
         const trip = bus.directionId === 1 
             ? trips.find(t => t.direction.includes("→ Karlstad"))
             : trips.find(t => t.direction.includes("→ Lövnäs"));
-
         if (!trip) return;
+
         const calls = trip.calls;
         const prevIndex = calls.findIndex(c => c.stop.id === bus.lastStopId);
         const nextIndex = calls.findIndex(c => c.stop.id === bus.nextStopId);
-        const step = 500 / (calls.length - 1);
-
-        const ratio = 0.5; // Buss mitt mellan hållplatser
+        const step = height / (calls.length - 1);
+        const ratio = 0.5; // mellan hållplatser
         const pos = step * (prevIndex + ratio);
 
         const busDiv = document.createElement("div");
-        busDiv.className = "bus " + (trip.direction.includes("→ Karlstad") ? "direction-up" : "direction-down");
+        busDiv.className = bus.directionId === 1 ? "bus bus-left" : "bus bus-right";
         busDiv.style.top = `${pos}px`;
+        busDiv.innerHTML = bus.directionId === 1 ? "↑" : "↓";
         container.appendChild(busDiv);
     });
 }
@@ -57,9 +61,15 @@ async function renderLine() {
     container.innerHTML = '<div class="line" id="line"></div>';
 
     const trips = await loadTrips();
-    const buses = await fetchRealtimeBuses();
 
-    trips.forEach(trip => drawLine(trip, container));
+    // Skapa index-map för att avgöra utskott
+    const idsKarlstad = trips[0].calls.map(c => c.stop.id);
+    const idsLövnas = trips[1].calls.map(c => c.stop.id);
+
+    const step = 500 / Math.max(idsKarlstad.length, idsLövnas.length);
+    trips.forEach(trip => drawStops(trip, container, {other: trip.direction.includes("→ Karlstad") ? idsLövnas : idsKarlstad}));
+
+    const buses = await fetchRealtimeBuses();
     placeBuses(trips, buses, container);
 
     setTimeout(renderLine, 30000);
