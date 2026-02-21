@@ -9,16 +9,16 @@ h2 {
 
 .line-container {
     position: relative;
-    width: 200px; /* tillräckligt för vänster/höger bussar */
+    width: 220px;
     margin: 0 auto 40px auto;
 }
 
 .line {
     position: absolute;
-    left: 100px; /* mitten */
+    left: 100px;
     width: 4px;
     background: #333;
-    height: 500px; /* dynamiskt justeras via JS */
+    height: 500px; /* dynamiskt justeras av JS */
 }
 
 .stop {
@@ -28,20 +28,9 @@ h2 {
     padding: 2px 0;
 }
 
-.stop.center {
-    left: 88px; /* på huvudlinjen */
-    text-align: center;
-}
-
-.stop.left {
-    left: 0px; /* utskott vänster */
-    text-align: right;
-}
-
-.stop.right {
-    left: 120px; /* utskott höger */
-    text-align: left;
-}
+.stop.center { left: 88px; text-align: center; }
+.stop.left   { left: 0px; text-align: right; }
+.stop.right  { left: 120px; text-align: left; }
 
 .bus {
     width: 16px;
@@ -56,16 +45,5 @@ h2 {
     font-weight: bold;
 }
 
-.bus-left {
-    background: green; /* mot Karlstad */
-    left: 80px;
-}
-
-.bus-right {
-    background: blue; /* mot Lövnäs */
-    left: 120px;
-}
-
-.arrow {
-    font-size: 12px;
-}
+.bus-left  { background: green; left: 80px; }  /* mot Karlstad */
+.bus-right { background: blue; left: 120px; } /* mot Lövnäs */
