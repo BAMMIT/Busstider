@@ -1,55 +1,28 @@
-body {
-    font-family: system-ui, sans-serif;
-    margin: 20px;
-}
-
-h2 {
-    text-align: center;
-}
-
-.line-container {
+/* css/advanced-line.css */
+#line-container.advanced-line {
     position: relative;
     width: 300px;
     margin: 0 auto 40px auto;
 }
 
-.line {
+#line-container.advanced-line .line {
     position: absolute;
-    left: 140px; /* mitten av linjen */
+    left: 140px;
     width: 4px;
     background: #333;
-    height: 600px; /* dynamiskt justeras av JS */
+    height: 600px;
 }
 
-.stop {
-    position: absolute;
-    font-size: 14px;
-    padding: 2px 0;
-}
+#line-container.advanced-line .stop.center { left: 128px; text-align: center; }
+#line-container.advanced-line .stop.left   { left: 0px; text-align: right; }
+#line-container.advanced-line .stop.right  { left: 160px; text-align: left; }
 
-.stop.center { left: 128px; text-align: center; }
-.stop.left   { left: 0px; text-align: right; }
-.stop.right  { left: 160px; text-align: left; }
-
-.streck {
+#line-container.advanced-line .streck {
     position: absolute;
     width: 20px;
     height: 2px;
     background: #333;
 }
 
-.bus {
-    width: 16px;
-    height: 16px;
-    border-radius: 50%;
-    position: absolute;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: white;
-    font-size: 10px;
-    font-weight: bold;
-}
-
-.bus-left  { background: green; left: 120px; }  /* mot Karlstad */
-.bus-right { background: blue; left: 160px; }  /* mot Lövnäs */
+#line-container.advanced-line .bus-left  { background: green; left: 120px; }
+#line-container.advanced-line .bus-right { background: blue; left: 160px; }
