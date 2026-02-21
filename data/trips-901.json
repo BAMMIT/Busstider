@@ -1,20 +1,38 @@
 [
   {
-    "trip_id": "901-20260221-1",
-    "start_date": "2026-02-21",
+    "direction": "Lövnäs → Karlstad",
     "calls": [
-      { "stop": { "id": "740025756", "name": "Hållplats A" }, "scheduledArrival": "2026-02-21T08:00:00" },
-      { "stop": { "id": "740072181", "name": "Hållplats B" }, "scheduledArrival": "2026-02-21T08:10:00" },
-      { "stop": { "id": "740010760", "name": "Hållplats C" }, "scheduledArrival": "2026-02-21T08:25:00" }
+      { "stop": { "id": "740025756", "name": "Bryggerivägen" }  },
+      { "stop": { "id": "740022236", "name": "Lövnäs Hammarö" } },
+      { "stop": { "id": "740035993", "name": "Hallersrudsvägen" } },
+      { "stop": { "id": "740036019", "name": "Hammarlunden" } },
+      { "stop": { "id": "740036018", "name": "Hammar" } },
+      { "stop": { "id": "740072181", "name": "Jonsol Bytespunkt" } },
+      { "stop": { "id": "740022244", "name": "Nolgård" } },
+      { "stop": { "id": "740075537", "name": "Packhusallén" } },
+      { "stop": { "id": "740023258", "name": "Inre Hamn" } },
+      { "stop": { "id": "740022299", "name": "Södra Kyrkogatan" } },
+      { "stop": { "id": "740057604", "name": "Karlstad Stora Torget" } },      
+      { "stop": { "id": "740022197", "name": "Karlstad Residenstorget" } },
+      { "stop": { "id": "740010760", "name": "Karlstad Busstationen" } }
     ]
   },
   {
-    "trip_id": "901-20260221-2",
-    "start_date": "2026-02-21",
+    "direction": "Karlstad → Lövnäs",
     "calls": [
-      { "stop": { "id": "740010760", "name": "Hållplats C" }, "scheduledArrival": "2026-02-21T09:00:00" },
-      { "stop": { "id": "740025756", "name": "Hållplats A" }, "scheduledArrival": "2026-02-21T09:20:00" },
-      { "stop": { "id": "740072181", "name": "Hållplats B" }, "scheduledArrival": "2026-02-21T09:30:00" }
+      { "stop": { "id": "740010760", "name": "Karlstad Busstationen" } },
+      { "stop": { "id": "740021275", "name": "Karlstad Drottninggatan" } },
+      { "stop": { "id": "740022197", "name": "Karlstad Residenstorget" } },
+      { "stop": { "id": "740057604", "name": "Karlstad Stora Torget" } },  
+      { "stop": { "id": "740022299", "name": "Södra Kyrkogatan" } },
+      { "stop": { "id": "740023258", "name": "Inre Hamn" } },
+      { "stop": { "id": "740075537", "name": "Packhusallén" } },
+      { "stop": { "id": "740022244", "name": "Nolgård" } },
+      { "stop": { "id": "740072181", "name": "Jonsol Bytespunkt" } },
+      { "stop": { "id": "740036018", "name": "Hammar" } },
+      { "stop": { "id": "740036019", "name": "Hammarlunden" } },
+      { "stop": { "id": "740035993", "name": "Hallersrudsvägen" } },
+      { "stop": { "id": "740025756", "name": "Bryggerivägen" } }
     ]
   }
 ]
