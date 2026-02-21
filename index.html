@@ -12,6 +12,24 @@ body {
     background: #f3f4f6;
 }
 
+.columns {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+}
+
+@media (max-width: 768px) {
+    .columns {
+        grid-template-columns: 1fr;
+    }
+}
+
+.column-title {
+    font-size: 16px;
+    font-weight: 600;
+    margin-bottom: 10px;
+}
+    
 .wrapper {
     max-width: 750px;
     margin: 20px auto;
@@ -93,6 +111,41 @@ function formatTime(dateString) {
     return date.toLocaleTimeString("sv-SE", { hour: "2-digit", minute: "2-digit" });
 }
 
+function buildRow(item) {
+    const scheduled = formatTime(item.scheduled);
+    const realtime = formatTime(item.realtime);
+    const delay = item.delay;
+    const canceled = item.canceled;
+
+    let statusClass = "on-time";
+    let timeText = realtime;
+
+    if (canceled) {
+        timeText = "Inställd";
+    } else if (delay < 0) {
+        statusClass = "early";
+        timeText = `${realtime} (${Math.abs(delay)} min tidig)`;
+    } else if (delay > 0) {
+        statusClass = "late";
+        timeText = `${realtime} (+${Math.round(delay/60)} min)`;
+    }
+
+    return `
+        <div class="bus-item">
+            <div>
+                <div class="bus-line">Linje ${item.route.designation}</div>
+                <div class="bus-direction">Mot ${item.route.direction}</div>
+            </div>
+            <div class="bus-time ${statusClass}">
+                ${canceled ? `<span class="canceled">Inställd</span>` : timeText}
+                <div style="font-size:12px;color:#888;font-weight:400;">
+                    Tidtabell: ${scheduled}
+                </div>
+            </div>
+        </div>
+    `;
+}
+    
 async function fetchStop(stopId, type) {
     const endpoint = `https://realtime-api.trafiklab.se/v1/${type}/${stopId}?key=${API_KEY}`;
     const response = await fetch(endpoint);
@@ -100,7 +153,7 @@ async function fetchStop(stopId, type) {
 }
 
 async function loadData() {
-    const { stops, type } = getParams();
+    const { stops } = getParams();
     const container = document.getElementById("app");
     container.innerHTML = "";
 
@@ -108,54 +161,37 @@ async function loadData() {
         if (!stop) continue;
 
         try {
-            const data = await fetchStop(stop, type);
-            const stopName = data.stops[0]?.name || "Hållplats";
+            const arrivalsData = await fetchStop(stop, "arrivals");
+            const departuresData = await fetchStop(stop, "departures");
+
+            const stopName = arrivalsData.stops[0]?.name || "Hållplats";
 
             let html = `
                 <div class="stop-card">
-                    <div class="stop-header">
-                        ${type === "arrivals" ? "Ankomster" : "Avgångar"} – ${stopName}
-                    </div>
+                    <div class="stop-header">${stopName}</div>
+                    <div class="columns">
             `;
 
-            const list = type === "arrivals" ? data.arrivals : data.departures;
+            // === Ankomster (vänster) ===
+            html += `<div>
+                        <div class="column-title">Ankomster</div>`;
 
-            list.slice(0, 8).forEach(item => {
-                const scheduled = formatTime(item.scheduled);
-                const realtime = formatTime(item.realtime);
-                const delay = item.delay;
-                const canceled = item.canceled;
-
-                let statusClass = "on-time";
-                let timeText = realtime;
-
-                if (canceled) {
-                    timeText = "Inställd";
-                } else if (delay < 0) {
-                    statusClass = "early";
-                    timeText = `${realtime} (${Math.abs(delay)} min tidig)`;
-                } else if (delay > 0) {
-                    statusClass = "late";
-                    timeText = `${realtime} (+${Math.round(delay/60)} min)`;
-                }
-
-                html += `
-                    <div class="bus-item">
-                        <div>
-                            <div class="bus-line">Linje ${item.route.designation}</div>
-                            <div class="bus-direction">Mot ${item.route.direction}</div>
-                        </div>
-                        <div class="bus-time ${statusClass}">
-                            ${canceled ? `<span class="canceled">Inställd</span>` : timeText}
-                            <div style="font-size:12px;color:#888;font-weight:400;">
-                                Tidtabell: ${scheduled}
-                            </div>
-                        </div>
-                    </div>
-                `;
+            arrivalsData.arrivals.slice(0, 6).forEach(item => {
+                html += buildRow(item);
             });
 
             html += `</div>`;
+
+            // === Avgångar (höger) ===
+            html += `<div>
+                        <div class="column-title">Avgångar</div>`;
+
+            departuresData.departures.slice(0, 6).forEach(item => {
+                html += buildRow(item);
+            });
+
+            html += `</div></div></div>`;
+
             container.innerHTML += html;
 
         } catch {
