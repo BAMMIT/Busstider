@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Busstider 901 – Linjediagram</title>
+<link rel="stylesheet" href="css/style.css">
+<style>
+.line-container { display: flex; flex-direction: column; align-items: center; margin: 20px; }
+.line { position: relative; width: 4px; background: #333; height: 400px; margin: 0 40px; }
+.stop { position: absolute; left: -20px; width: 40px; text-align: center; font-size: 14px; }
+.bus { width: 12px; height: 12px; border-radius: 50%; background: red; position: absolute; left: -6px; }
+.direction-up { transform: translateY(-50%) translateX(-20px); }   /* Buss från Karlstad */
+.direction-down { transform: translateY(-50%) translateX(20px); } /* Buss mot Karlstad */
+</style>
+</head>
+<body>
+
+<h2>Linje 901 – Busspositioner</h2>
+<div class="line-container" id="line"></div>
+
+<script src="js/advanced-line.js"></script>
+</body>
+</html>
