@@ -1,68 +1,71 @@
-const API_KEY = "DIN_TRAFIKLAB_API_NYCKEL"; // Byt ut mot din Trafiklab-nyckel
-const LINE_ID = "901"; // Linje 901
-
-async function loadTrips() {
-    const res = await fetch("data/trips-901.json");
-    return await res.json();
+body {
+    font-family: system-ui, sans-serif;
+    margin: 20px;
 }
 
-// Dummy-funktion för realtidsbussar – ersätt med Trafiklab API
-async function fetchRealtimeBuses() {
-    // Exempel med två bussar
-    return [
-        { vehicleRef: "901-1", directionId: 1, lastStopId: "740022236", nextStopId: "740035993" },
-        { vehicleRef: "901-2", directionId: 2, lastStopId: "740022299", nextStopId: "740075537" }
-    ];
+h2 {
+    text-align: center;
 }
 
-function drawLine(trip, container) {
-    const height = 500;
-    const step = height / (trip.calls.length - 1);
-
-    trip.calls.forEach((stop, i) => {
-        const stopDiv = document.createElement("div");
-        stopDiv.className = "stop";
-        stopDiv.style.top = `${i * step}px`;
-        stopDiv.innerText = stop.stop.name;
-        container.appendChild(stopDiv);
-    });
-
-    return step;
+.line-container {
+    position: relative;
+    width: 200px; /* tillräckligt för vänster/höger bussar */
+    margin: 0 auto 40px auto;
 }
 
-function placeBuses(trips, buses, container) {
-    buses.forEach(bus => {
-        const trip = bus.directionId === 1 
-            ? trips.find(t => t.direction.includes("→ Karlstad"))
-            : trips.find(t => t.direction.includes("→ Lövnäs"));
-
-        if (!trip) return;
-        const calls = trip.calls;
-        const prevIndex = calls.findIndex(c => c.stop.id === bus.lastStopId);
-        const nextIndex = calls.findIndex(c => c.stop.id === bus.nextStopId);
-        const step = 500 / (calls.length - 1);
-
-        const ratio = 0.5; // Buss mitt mellan hållplatser
-        const pos = step * (prevIndex + ratio);
-
-        const busDiv = document.createElement("div");
-        busDiv.className = "bus " + (trip.direction.includes("→ Karlstad") ? "direction-up" : "direction-down");
-        busDiv.style.top = `${pos}px`;
-        container.appendChild(busDiv);
-    });
+.line {
+    position: absolute;
+    left: 100px; /* mitten */
+    width: 4px;
+    background: #333;
+    height: 500px; /* dynamiskt justeras via JS */
 }
 
-async function renderLine() {
-    const container = document.getElementById("line-container");
-    container.innerHTML = '<div class="line" id="line"></div>';
-
-    const trips = await loadTrips();
-    const buses = await fetchRealtimeBuses();
-
-    trips.forEach(trip => drawLine(trip, container));
-    placeBuses(trips, buses, container);
-
-    setTimeout(renderLine, 30000);
+.stop {
+    position: absolute;
+    width: 120px;
+    font-size: 14px;
+    padding: 2px 0;
 }
 
-renderLine();
+.stop.center {
+    left: 88px; /* på huvudlinjen */
+    text-align: center;
+}
+
+.stop.left {
+    left: 0px; /* utskott vänster */
+    text-align: right;
+}
+
+.stop.right {
+    left: 120px; /* utskott höger */
+    text-align: left;
+}
+
+.bus {
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    position: absolute;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 10px;
+    font-weight: bold;
+}
+
+.bus-left {
+    background: green; /* mot Karlstad */
+    left: 80px;
+}
+
+.bus-right {
+    background: blue; /* mot Lövnäs */
+    left: 120px;
+}
+
+.arrow {
+    font-size: 12px;
+}
