@@ -1,5 +1,4 @@
 const API_KEY = "d04e6df880fd4f33bd14a706425b0994"; // Sätt din nyckel här
-const API_KEY = "DIN_TRAFIKLAB_API_NYCKEL"; // Byt mot din Trafiklab-nyckel
 const LINE_ID = "901";
 const HEIGHT = 600; // pixel på linjen
 
