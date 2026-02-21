@@ -1,80 +1,48 @@
 body {
-    margin: 0;
     font-family: system-ui, sans-serif;
-    background: #f3f4f6;
+    margin: 20px;
 }
 
-.wrapper {
-    max-width: 750px;
-    margin: 20px auto;
-    padding: 10px;
-}
-
-.stop-card {
-    background: white;
-    border-radius: 14px;
-    padding: 18px;
-    margin-bottom: 25px;
-    box-shadow: 0 4px 14px rgba(0,0,0,0.06);
-}
-
-.stop-header {
-    font-size: 20px;
-    font-weight: 600;
-    margin-bottom: 15px;
-}
-
-.bus-item {
-    display: flex;
-    justify-content: space-between;
-    padding: 12px;
-    border-radius: 10px;
-    background: #f9fafb;
-    margin-bottom: 8px;
-}
-
-.bus-line {
-    font-weight: 600;
-}
-
-.bus-direction {
-    font-size: 13px;
-    color: #666;
-}
-
-.bus-time {
-    text-align: right;
-    font-weight: 600;
-}
-
-.early { color: #059669; }
-.late { color: #dc2626; }
-.on-time { color: #111827; }
-
-.canceled {
-    color: #dc2626;
-    font-weight: 600;
-}
-
-.footer {
+h2 {
     text-align: center;
-    font-size: 12px;
-    color: #888;
-    margin-top: 10px;
 }
 
-.columns {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 20px;
+.line-container {
+    position: relative;
+    width: 80px;
+    margin: 0 auto 40px auto;
 }
 
-@media (max-width: 768px) {
-    .columns { grid-template-columns: 1fr; }
+.line {
+    position: absolute;
+    left: 38px;
+    width: 4px;
+    background: #333;
+    height: 500px; /* dynamiskt uppdateras via JS */
 }
 
-.column-title {
-    font-size: 16px;
-    font-weight: 600;
-    margin-bottom: 10px;
+.stop {
+    position: absolute;
+    left: -60px;
+    width: 180px;
+    text-align: left;
+    font-size: 14px;
+    padding: 2px 0;
+}
+
+.bus {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background: red;
+    position: absolute;
+    left: -6px;
+}
+
+.direction-up {
+    background: green; /* mot Karlstad */
+}
+
+.direction-down {
+    background: blue; /* mot Lövnäs */
 }
