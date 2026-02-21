@@ -9,28 +9,34 @@ h2 {
 
 .line-container {
     position: relative;
-    width: 220px;
+    width: 300px;
     margin: 0 auto 40px auto;
 }
 
 .line {
     position: absolute;
-    left: 100px;
+    left: 140px; /* mitten av linjen */
     width: 4px;
     background: #333;
-    height: 500px; /* dynamiskt justeras av JS */
+    height: 600px; /* dynamiskt justeras av JS */
 }
 
 .stop {
     position: absolute;
-    width: 120px;
     font-size: 14px;
     padding: 2px 0;
 }
 
-.stop.center { left: 88px; text-align: center; }
+.stop.center { left: 128px; text-align: center; }
 .stop.left   { left: 0px; text-align: right; }
-.stop.right  { left: 120px; text-align: left; }
+.stop.right  { left: 160px; text-align: left; }
+
+.streck {
+    position: absolute;
+    width: 20px;
+    height: 2px;
+    background: #333;
+}
 
 .bus {
     width: 16px;
@@ -45,5 +51,5 @@ h2 {
     font-weight: bold;
 }
 
-.bus-left  { background: green; left: 80px; }  /* mot Karlstad */
-.bus-right { background: blue; left: 120px; } /* mot Lövnäs */
+.bus-left  { background: green; left: 120px; }  /* mot Karlstad */
+.bus-right { background: blue; left: 160px; }  /* mot Lövnäs */
