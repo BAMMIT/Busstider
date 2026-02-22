@@ -20,19 +20,20 @@
   {
     "direction": "Karlstad → Lövnäs",
     "calls": [
-      { "stop": { "id": "740010760", "name": "Karlstad Busstationen" } },
-      { "stop": { "id": "740021275", "name": "Karlstad Drottninggatan" } },
-      { "stop": { "id": "740022197", "name": "Karlstad Residenstorget" } },
-      { "stop": { "id": "740057604", "name": "Karlstad Stora Torget" } },  
-      { "stop": { "id": "740022299", "name": "Södra Kyrkogatan" } },
-      { "stop": { "id": "740023258", "name": "Inre Hamn" } },
-      { "stop": { "id": "740075537", "name": "Packhusallén" } },
-      { "stop": { "id": "740022244", "name": "Nolgård" } },
-      { "stop": { "id": "740072181", "name": "Jonsol Bytespunkt" } },
-      { "stop": { "id": "740036018", "name": "Hammar" } },
-      { "stop": { "id": "740036019", "name": "Hammarlunden" } },
-      { "stop": { "id": "740035993", "name": "Hallersrudsvägen" } },
-      { "stop": { "id": "740025756", "name": "Bryggerivägen" } }
+      { "stop": { "id": "740010760", "name": "Karlstad Busstationen", "direction": "SU" } },
+      { "stop": { "id": "740021275", "name": "Karlstad Drottninggatan", "direction": "U" } },
+      { "stop": { "id": "740022197", "name": "Karlstad Residenstorget", "direction": "B" } },
+      { "stop": { "id": "740057604", "name": "Karlstad Stora Torget", "direction": "B" } },  
+      { "stop": { "id": "740022299", "name": "Södra Kyrkogatan", "direction": "B"  } },
+      { "stop": { "id": "740023258", "name": "Inre Hamn", "direction": "B"  } },
+      { "stop": { "id": "740075537", "name": "Packhusallén", "direction": "B"  } },
+      { "stop": { "id": "740022244", "name": "Nolgård", "direction": "B"  } },
+      { "stop": { "id": "740072181", "name": "Jonsol Bytespunkt", "direction": "B"  } },
+      { "stop": { "id": "740036018", "name": "Hammar", "direction": "B"  } },
+      { "stop": { "id": "740036019", "name": "Hammarlunden", "direction": "B"  } },
+      { "stop": { "id": "740035993", "name": "Hallersrudsvägen", "direction": "B"  } },
+       { "stop": { "id": "740022236", "name": "Lövnäs Hammarö", "direction": "R"  } },
+      { "stop": { "id": "740025756", "name": "Bryggerivägen", "direction": "SR"  } }
     ]
   }
 ]
