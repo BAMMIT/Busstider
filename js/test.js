@@ -31,9 +31,9 @@ async function fetchDepartures(stop) {
 
     if (departures901.length === 0) return null;
 
-    // Sortera på scheduledTime
+    // Sortera på scheduled
     departures901.sort((a, b) =>
-      new Date(a.scheduledTime) - new Date(b.scheduledTime)
+      new Date(a.scheduled) - new Date(b.scheduled)
     );
 
     return departures901[0]; // nästa avgång
@@ -74,13 +74,13 @@ if (!container) {
       `;
     } else {
 
-      const scheduled = new Date(nextDeparture.scheduledTime).toLocaleTimeString("sv-SE", {
+      const scheduled = new Date(nextDeparture.scheduled).toLocaleTimeString("sv-SE", {
         hour: "2-digit",
         minute: "2-digit"
       });
 
-      const realtime = nextDeparture.estimatedTime
-        ? new Date(nextDeparture.estimatedTime).toLocaleTimeString("sv-SE", {
+      const realtime = nextDeparture.realtime
+        ? new Date(nextDeparture.realtime).toLocaleTimeString("sv-SE", {
             hour: "2-digit",
             minute: "2-digit"
           })
