@@ -14,6 +14,7 @@ h2 {
 .stop-card {
     max-width: 650px;
     margin: 20px auto;
+    font-weight: bold;
 }
 
 .stop-header {
