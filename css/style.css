@@ -76,26 +76,27 @@ body {
 
 /* Realtidsfärger – matchar simple.js */
 
-.bus-time.on-time {
-    color: #16a34a; /* GRÖN */
+.realtime {
+    font-size: 16px;
     font-weight: 500;
 }
 
-.bus-time.late {
-    color: #dc2626; /* RÖD */
-    font-weight: 500;
+.realtime.on-time {
+    color: #16a34a;
 }
 
-.bus-time.static {
+.realtime.late {
+    color: #dc2626;
+}
+
+.realtime.static {
     color: #000;
 }
 
-.bus-time.canceled {
+.realtime.canceled {
     color: #6b7280;
     text-decoration: line-through;
 }
-
-/* Tidtabellstid */
 
 .scheduled-time {
     font-size: 13px;
