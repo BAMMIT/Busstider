@@ -50,6 +50,13 @@ async function fetchDepartures(stop) {
 
 async function loadDepartures() {
 
+const container = document.getElementById("departures");
+
+if (!container) {
+  console.error("Element #departures finns inte i HTML!");
+  return;
+}
+  
   const container = document.getElementById("departures");
   container.innerHTML = "";
 
