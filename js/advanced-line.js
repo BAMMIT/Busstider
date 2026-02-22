@@ -4,158 +4,152 @@
  *********************************************************/
 
 const API_KEY = "d04e6df880fd4f33bd14a706425b0994";
-const ROUTE_NUMBER = "901";
+// ================================
+// KONFIGURATION
+// ================================
 
-/* ===========================
-   STOPP-LISTA
-=========================== */
+const LINE_NUMBER = "901";
 
-const calls = [
-  { stop: { id: "740010760", name: "Karlstad Busstationen", direction: "SU" } },
-  { stop: { id: "740021275", name: "Karlstad Drottninggatan", direction: "U" } },
-  { stop: { id: "740022197", name: "Karlstad Residenstorget", direction: "B" } },
-  { stop: { id: "740057604", name: "Karlstad Stora Torget", direction: "B" } },
-  { stop: { id: "740022299", name: "Södra Kyrkogatan", direction: "B" } },
-  { stop: { id: "740023258", name: "Inre Hamn", direction: "B" } },
-  { stop: { id: "740075537", name: "Packhusallén", direction: "B" } },
-  { stop: { id: "740022244", name: "Nolgård", direction: "B" } },
-  { stop: { id: "740072181", name: "Jonsol Bytespunkt", direction: "B" } },
-  { stop: { id: "740036018", name: "Hammar", direction: "B" } },
-  { stop: { id: "740036019", name: "Hammarlunden", direction: "B" } },
-  { stop: { id: "740035993", name: "Hallersrudsvägen", direction: "B" } },
-  { stop: { id: "740022236", name: "Lövnäs Hammarö", direction: "R" } },
-  { stop: { id: "740025756", name: "Bryggerivägen", direction: "SR" } }
+// Din hållplatslista
+const CALLS = [
+  { id: "740010760", name: "Karlstad Busstationen", direction: "SU" },
+  { id: "740021275", name: "Karlstad Drottninggatan", direction: "U" },
+  { id: "740022197", name: "Karlstad Residenstorget", direction: "B" },
+  { id: "740057604", name: "Karlstad Stora Torget", direction: "B" },
+  { id: "740022299", name: "Södra Kyrkogatan", direction: "B" },
+  { id: "740023258", name: "Inre Hamn", direction: "B" },
+  { id: "740075537", name: "Packhusallén", direction: "B" },
+  { id: "740022244", name: "Nolgård", direction: "B" },
+  { id: "740072181", name: "Jonsol Bytespunkt", direction: "B" },
+  { id: "740036018", name: "Hammar", direction: "B" },
+  { id: "740036019", name: "Hammarlunden", direction: "B" },
+  { id: "740035993", name: "Hallersrudsvägen", direction: "B" },
+  { id: "740022236", name: "Lövnäs Hammarö", direction: "R" },
+  { id: "740025756", name: "Bryggerivägen", direction: "SR" }
 ];
 
+// Realtids-API (JSON-version via Trafiklab proxy)
+const REALTIME_URL = "https://api.trafiklab.se/samtrafiken/gtfs-rt/vehiclepositions.json?key=${API_KEY}";
 
-/* ===========================
-   BYGG RIKTNINGAR
-=========================== */
+// ================================
+// BYGG LINJEN
+// ================================
 
-function buildDirections() {
+function buildLine(direction = "outbound") {
+  const container = document.getElementById("line");
+  container.innerHTML = "";
 
-    const outbound = calls
-        .filter(c => ["SU", "U", "B", "SR"].includes(c.stop.direction))
-        .map(c => c.stop.id);
+  let stops;
 
-    const inbound = [...calls]
-        .reverse()
-        .filter(c => ["SR", "R", "B", "SU"].includes(c.stop.direction))
-        .map(c => c.stop.id);
-
-    return { outbound, inbound };
-}
-
-
-/* ===========================
-   RITA HÅLLPLATSER
-=========================== */
-
-function renderStops() {
-
-    const container = document.getElementById("line-container");
-    const total = calls.length;
-
-    calls.forEach((call, index) => {
-
-        const percent = (index / (total - 1)) * 100;
-
-        const stopEl = document.createElement("div");
-        stopEl.classList.add("stop");
-        stopEl.classList.add("main");
-        stopEl.style.top = percent + "%";
-        stopEl.textContent = call.stop.name;
-
-        container.appendChild(stopEl);
-    });
-}
-
-
-/* ===========================
-   HÄMTA REALTIME
-=========================== */
-
-async function fetchRealtime(stopId) {
-
-    const res = await fetch(
-        `https://realtime-api.trafiklab.se/v1/departures/${stopId}?key=${API_KEY}`
+  if (direction === "outbound") {
+    stops = CALLS.filter(s =>
+      s.direction === "SU" ||
+      s.direction === "U" ||
+      s.direction === "B" ||
+      s.direction === "SR"
     );
+  } else {
+    stops = CALLS
+      .slice()
+      .reverse()
+      .filter(s =>
+        s.direction === "SU" ||
+        s.direction === "R" ||
+        s.direction === "B" ||
+        s.direction === "SR"
+      );
+  }
 
-    return await res.json();
+  stops.forEach((stop, index) => {
+    const stopDiv = document.createElement("div");
+    stopDiv.className = "stop";
+    stopDiv.dataset.stopId = stop.id;
+
+    stopDiv.innerHTML = `
+      <div class="stop-dot"></div>
+      <div class="stop-name">${stop.name}</div>
+    `;
+
+    container.appendChild(stopDiv);
+  });
+
+  return stops;
 }
 
+// ================================
+// HÄMTA REALTID
+// ================================
 
-/* ===========================
-   RITA BUSS
-=========================== */
+async function fetchRealtime() {
+  try {
+    const response = await fetch(REALTIME_URL);
+    const data = await response.json();
 
-function drawBus(index, totalStops, side) {
+    const vehicles = data.entity
+      .map(e => e.vehicle)
+      .filter(v =>
+        v.trip?.routeId === LINE_NUMBER
+      );
 
-    const percent = (index / (totalStops - 1)) * 100;
+    return vehicles;
 
-    const bus = document.createElement("div");
-    bus.classList.add("bus");
-
-    if (side === "left") {
-        bus.classList.add("bus-left");
-    } else {
-        bus.classList.add("bus-right");
-    }
-
-    bus.style.top = percent + "%";
-
-    document.getElementById("line-container").appendChild(bus);
+  } catch (error) {
+    console.error("Realtime error:", error);
+    return [];
+  }
 }
 
+// ================================
+// POSITIONERA BUSS MELLAN STOPP
+// ================================
 
-/* ===========================
-   LADDA FORDON
-=========================== */
+function placeVehicleBetweenStops(stops, vehicle) {
 
-async function loadVehicles() {
+  if (!vehicle.stopId) return;
 
-    const { outbound, inbound } = buildDirections();
+  const currentIndex = stops.findIndex(s => s.id === vehicle.stopId);
+  if (currentIndex === -1 || currentIndex === stops.length - 1) return;
 
-    // Ta bort gamla bussar
-    document.querySelectorAll(".bus").forEach(b => b.remove());
+  const container = document.getElementById("line");
 
-    for (const call of calls) {
+  // Ta bort gammal buss
+  const oldBus = document.querySelector(".vehicle");
+  if (oldBus) oldBus.remove();
 
-        try {
+  const nextIndex = currentIndex + 1;
 
-            const data = await fetchRealtime(call.stop.id);
+  const currentStopEl = container.children[currentIndex];
+  const nextStopEl = container.children[nextIndex];
 
-            data.departures
-                .filter(d => d.route.designation === ROUTE_NUMBER)
-                .slice(0, 1)
-                .forEach(dep => {
+  const bus = document.createElement("div");
+  bus.className = "vehicle";
+  bus.innerText = "🚌";
 
-                    const stopId = call.stop.id;
+  // Placera mitt emellan
+  const topPosition =
+    currentStopEl.offsetTop +
+    (nextStopEl.offsetTop - currentStopEl.offsetTop) / 2;
 
-                    const outIndex = outbound.indexOf(stopId);
-                    const inIndex = inbound.indexOf(stopId);
+  bus.style.top = `${topPosition}px`;
 
-                    if (outIndex !== -1) {
-                        drawBus(outIndex, outbound.length, "left");
-                    }
-
-                    if (inIndex !== -1) {
-                        drawBus(inIndex, inbound.length, "right");
-                    }
-
-                });
-
-        } catch (err) {
-            console.error("Fel vid hämtning av stopp", call.stop.id);
-        }
-    }
+  container.appendChild(bus);
 }
 
+// ================================
+// INIT
+// ================================
 
-/* ===========================
-   INIT
-=========================== */
+async function init() {
+  const stops = buildLine("outbound");
 
-renderStops();
-loadVehicles();
-setInterval(loadVehicles, 60000);
+  const vehicles = await fetchRealtime();
+
+  if (vehicles.length > 0) {
+    placeVehicleBetweenStops(stops, vehicles[0]);
+  }
+}
+
+init();
+
+// Uppdatera var 60:e sekund
+setInterval(init, 60000);
