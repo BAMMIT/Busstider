@@ -4,14 +4,9 @@
  *********************************************************/
 
 const API_KEY = "d04e6df880fd4f33bd14a706425b0994";
-// ================================
-// KONFIGURATION
-// ================================
-
 const LINE_NUMBER = "901";
 
-// Din hållplatslista
-const CALLS = [
+const STOPS = [
   { id: "740010760", name: "Karlstad Busstationen", direction: "SU" },
   { id: "740021275", name: "Karlstad Drottninggatan", direction: "U" },
   { id: "740022197", name: "Karlstad Residenstorget", direction: "B" },
@@ -28,128 +23,122 @@ const CALLS = [
   { id: "740025756", name: "Bryggerivägen", direction: "SR" }
 ];
 
-// Realtids-API (JSON-version via Trafiklab proxy)
-const REALTIME_URL = "https://api.trafiklab.se/samtrafiken/gtfs-rt/vehiclepositions.json?key=${API_KEY}";
-
-// ================================
+// =====================================
 // BYGG LINJEN
-// ================================
+// =====================================
 
-function buildLine(direction = "outbound") {
+function buildLine() {
   const container = document.getElementById("line");
   container.innerHTML = "";
 
-  let stops;
+  STOPS.forEach(stop => {
+    const el = document.createElement("div");
+    el.className = "stop";
+    el.dataset.id = stop.id;
 
-  if (direction === "outbound") {
-    stops = CALLS.filter(s =>
-      s.direction === "SU" ||
-      s.direction === "U" ||
-      s.direction === "B" ||
-      s.direction === "SR"
-    );
-  } else {
-    stops = CALLS
-      .slice()
-      .reverse()
-      .filter(s =>
-        s.direction === "SU" ||
-        s.direction === "R" ||
-        s.direction === "B" ||
-        s.direction === "SR"
-      );
-  }
-
-  stops.forEach((stop, index) => {
-    const stopDiv = document.createElement("div");
-    stopDiv.className = "stop";
-    stopDiv.dataset.stopId = stop.id;
-
-    stopDiv.innerHTML = `
+    el.innerHTML = `
       <div class="stop-dot"></div>
       <div class="stop-name">${stop.name}</div>
     `;
 
-    container.appendChild(stopDiv);
+    container.appendChild(el);
   });
-
-  return stops;
 }
 
-// ================================
-// HÄMTA REALTID
-// ================================
+// =====================================
+// HÄMTA DEPARTURES FÖR FÖRSTA STOPPET
+// =====================================
 
-async function fetchRealtime() {
-  try {
-    const response = await fetch(REALTIME_URL);
-    const data = await response.json();
+async function fetchDepartures(stopId) {
 
-    const vehicles = data.entity
-      .map(e => e.vehicle)
-      .filter(v =>
-        v.trip?.routeId === LINE_NUMBER
-      );
+  const url = `https://api.trafiklab.se/samtrafiken/departures.json?originId=${stopId}&key=${API_KEY}`;
 
-    return vehicles;
+  const response = await fetch(url);
+  const data = await response.json();
 
-  } catch (error) {
-    console.error("Realtime error:", error);
-    return [];
-  }
+  return data.departures
+    .filter(d => d.line?.number === LINE_NUMBER)
+    .sort((a, b) => new Date(a.time) - new Date(b.time));
 }
 
-// ================================
-// POSITIONERA BUSS MELLAN STOPP
-// ================================
+// =====================================
+// RÄKNA POSITION
+// =====================================
 
-function placeVehicleBetweenStops(stops, vehicle) {
+function calculateProgress(departureTime, arrivalTime) {
 
-  if (!vehicle.stopId) return;
+  const now = new Date().getTime();
+  const dep = new Date(departureTime).getTime();
+  const arr = new Date(arrivalTime).getTime();
 
-  const currentIndex = stops.findIndex(s => s.id === vehicle.stopId);
-  if (currentIndex === -1 || currentIndex === stops.length - 1) return;
+  const total = arr - dep;
+  const passed = now - dep;
+
+  let percent = passed / total;
+
+  if (percent < 0) percent = 0;
+  if (percent > 1) percent = 1;
+
+  return percent;
+}
+
+// =====================================
+// PLACERA BUSS
+// =====================================
+
+function placeVehicle(progress, fromIndex) {
 
   const container = document.getElementById("line");
 
-  // Ta bort gammal buss
-  const oldBus = document.querySelector(".vehicle");
-  if (oldBus) oldBus.remove();
+  const old = document.querySelector(".vehicle");
+  if (old) old.remove();
 
-  const nextIndex = currentIndex + 1;
+  const fromStop = container.children[fromIndex];
+  const toStop = container.children[fromIndex + 1];
 
-  const currentStopEl = container.children[currentIndex];
-  const nextStopEl = container.children[nextIndex];
+  if (!fromStop || !toStop) return;
+
+  const start = fromStop.offsetTop;
+  const end = toStop.offsetTop;
+
+  const position = start + (end - start) * progress;
 
   const bus = document.createElement("div");
   bus.className = "vehicle";
   bus.innerText = "🚌";
-
-  // Placera mitt emellan
-  const topPosition =
-    currentStopEl.offsetTop +
-    (nextStopEl.offsetTop - currentStopEl.offsetTop) / 2;
-
-  bus.style.top = `${topPosition}px`;
+  bus.style.top = `${position}px`;
 
   container.appendChild(bus);
 }
 
-// ================================
+// =====================================
 // INIT
-// ================================
+// =====================================
 
 async function init() {
-  const stops = buildLine("outbound");
 
-  const vehicles = await fetchRealtime();
+  buildLine();
 
-  if (vehicles.length > 0) {
-    placeVehicleBetweenStops(stops, vehicles[0]);
-  }
+  // Vi börjar från första stoppet
+  const firstStop = STOPS[0];
+
+  const departures = await fetchDepartures(firstStop.id);
+
+  if (departures.length === 0) return;
+
+  const nextDeparture = departures[0];
+
+  // Här behöver du arrivalTime till nästa stopp
+  // Antingen från samma objekt eller via arrivals-endpoint
+
+  const departureTime = nextDeparture.time;
+  const arrivalTime = nextDeparture.arrivalTime; // om API skickar detta
+
+  if (!arrivalTime) return;
+
+  const progress = calculateProgress(departureTime, arrivalTime);
+
+  placeVehicle(progress, 0);
 }
-
-init();
-
 // Uppdatera var 60:e sekund
 setInterval(init, 60000);
