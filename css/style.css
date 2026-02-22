@@ -50,6 +50,22 @@ h2 {
     font-weight: 500;
 }
 
+/* === Realtidsfärger (simple.js) === */
+
+.bus-time.early {
+    color: #16a34a; /* grön */
+    font-weight: 600;
+}
+
+.bus-time.late {
+    color: #dc2626; /* röd */
+    font-weight: 600;
+}
+
+.bus-time.ontime {
+    color: #111; /* svart */
+}
+
 .bus-destination {
     font-size: 12px;
     color: #555;
