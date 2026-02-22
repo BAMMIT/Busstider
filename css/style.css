@@ -14,13 +14,19 @@ h2 {
 .stop-card {
     max-width: 650px;
     margin: 20px auto;
-    font-weight: bold;
 }
 
 .stop-header {
     font-size: 22px;
-    font-weight: bold;
+    font-weight: 700;
     margin-bottom: 15px;
+}
+
+.column-title {
+    font-size: 14px;
+    font-weight: 600;
+    margin: 15px 0 8px 0;
+    color: #374151;
 }
 
 .footer {
