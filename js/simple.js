@@ -14,21 +14,26 @@ function formatTime(dateString) {
 
 function buildRow(item) {
     const scheduled = formatTime(item.scheduled);
-    const realtime = formatTime(item.realtime);
-    const delay = item.delay;
+    const hasRealtime = !!item.realtime;
+    const realtime = hasRealtime ? formatTime(item.realtime) : null;
+    const delaySeconds = item.delay ?? null;
     const canceled = item.canceled;
 
-    let statusClass = "on-time";
-    let timeText = realtime;
+    let statusClass = "static";   // svart som default
+    let timeText = scheduled;     // visa tidtabellstid om inget annat finns
 
     if (canceled) {
+        statusClass = "canceled";
         timeText = "Inställd";
-    } else if (delay < 0) {
-        statusClass = "early";
-        timeText = `${realtime} (${Math.abs(delay)} min tidig)`;
-    } else if (delay > 0) {
-        statusClass = "late";
-        timeText = `${realtime} (+${Math.round(delay/60)} min)`;
+    } 
+    else if (hasRealtime && delaySeconds !== null) {
+        if (delaySeconds > 0) {
+            statusClass = "late";
+            timeText = `${realtime} (+${Math.round(delaySeconds/60)} min)`;
+        } else {
+            statusClass = "on-time";
+            timeText = realtime;
+        }
     }
 
     return `
@@ -38,8 +43,8 @@ function buildRow(item) {
                 <div class="bus-direction">Mot ${item.route.direction}</div>
             </div>
             <div class="bus-time ${statusClass}">
-                ${canceled ? `<span class="canceled">Inställd</span>` : timeText}
-                <div style="font-size:12px;color:#888;font-weight:400;">
+                ${timeText}
+                <div class="scheduled-time">
                     Tidtabell: ${scheduled}
                 </div>
             </div>
