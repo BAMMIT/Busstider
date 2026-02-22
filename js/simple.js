@@ -19,20 +19,24 @@ function buildRow(item) {
     const delaySeconds = item.delay ?? null;
     const canceled = item.canceled;
 
-    let statusClass = "static";   // svart som default
-    let timeText = scheduled;     // visa tidtabellstid om inget annat finns
+    let statusClass = "static";
+    let realtimeText = scheduled;   // fallback
+    let showRealtime = false;
 
     if (canceled) {
         statusClass = "canceled";
-        timeText = "Inställd";
+        realtimeText = "Inställd";
+        showRealtime = true;
     } 
     else if (hasRealtime && delaySeconds !== null) {
+        showRealtime = true;
+
         if (delaySeconds > 0) {
             statusClass = "late";
-            timeText = `${realtime} (+${Math.round(delaySeconds/60)} min)`;
+            realtimeText = `${realtime} (+${Math.round(delaySeconds/60)} min)`;
         } else {
             statusClass = "on-time";
-            timeText = realtime;
+            realtimeText = realtime;
         }
     }
 
@@ -42,15 +46,18 @@ function buildRow(item) {
                 <div class="bus-line">Linje ${item.route.designation}</div>
                 <div class="bus-direction">Mot ${item.route.direction}</div>
             </div>
-            
+
             <div class="bus-time">
+
                 <div class="realtime ${statusClass}">
-                    ${timeText}
+                    ${realtimeText}
                 </div>
-            <div class="scheduled-time">
-                Tidtabell: ${scheduled}
+
+                <div class="scheduled-time">
+                    Tidtabell: ${scheduled}
+                </div>
+
             </div>
-</div>
         </div>
     `;
 }
