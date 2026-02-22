@@ -96,7 +96,82 @@ if (!container) {
     container.appendChild(row);
   }
 }
+function buildRow(item) {
+    const scheduled = formatTime(item.scheduled);
+    const hasRealtime = !!item.realtime;
+    const realtime = hasRealtime ? formatTime(item.realtime) : null;
+    const delaySeconds = item.delay ?? null;
+    const canceled = item.canceled;
 
+    let statusClass = "static";
+    let timeText = scheduled;
+
+    if (canceled) {
+        statusClass = "canceled";
+        timeText = "Inställd";
+    } else if (hasRealtime && delaySeconds !== null) {
+        if (delaySeconds > 0) {
+            statusClass = "late";
+            timeText = `${realtime} (+${Math.round(delaySeconds/60)} min)`;
+        } else {
+            statusClass = "on-time";
+            timeText = realtime;
+        }
+    }
+
+    return `
+        <div class="bus-item">
+            <div>
+                <div class="bus-line">Linje ${item.route.designation}</div>
+                <div class="bus-direction">Mot ${item.route.direction}</div>
+            </div>
+            <div class="bus-time ${statusClass}">
+                ${timeText}
+                <div class="scheduled-time">Tidtabell: ${scheduled}</div>
+            </div>
+        </div>
+    `;
+}
+
+async function loadData() {
+    const { stops } = getParams();
+    const container = document.getElementById("app");
+    container.innerHTML = "";
+
+    for (const stop of stops) {
+        if (!stop) continue;
+
+        try {
+            const data = await fetchStop(stop);
+            const stopName = data.stops[0]?.name || "Hållplats";
+
+            // Dela upp avgångar per riktning
+            const towardsKarlstad = data.departures.filter(d => d.route.destination.name.includes("Karlstad"));
+            const towardsHammaro = data.departures.filter(d => !d.route.destination.name.includes("Karlstad"));
+
+            let html = `<div class="stop-card"><div class="stop-header">Ankomster & Avgångar – ${stopName}</div>`;
+            html += `<div class="columns">`;
+
+            // Kolumn Karlstad
+            html += `<div class="column"><div class="column-title">Mot Karlstad</div>`;
+            towardsKarlstad.slice(0,6).forEach(item => html += buildRow(item));
+            html += `</div>`;
+
+            // Kolumn Bryggerivägen/Hammarö
+            html += `<div class="column"><div class="column-title">Mot Bryggerivägen/Hammarö</div>`;
+            towardsHammaro.slice(0,6).forEach(item => html += buildRow(item));
+            html += `</div>`;
+
+            html += `</div></div>`;
+            container.innerHTML += html;
+
+        } catch {
+            container.innerHTML += `<div class="stop-card">Kunde inte hämta hållplats ${stop}</div>`;
+        }
+    }
+
+    container.innerHTML += `<div class="footer">Uppdateras automatiskt var 60:e sekund</div>`;
+}
 // ==============================
 // INIT
 // ==============================
