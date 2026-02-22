@@ -1,112 +1,161 @@
-const API_KEY = "d04e6df880fd4f33bd14a706425b0994"; // Sätt din nyckel här
-const LINE_ID = "901";
-const HEIGHT = 600; // pixel på linjen
+/*********************************************************
+ *  Linje 901 – Advanced Line (Frontend only)
+ *  Realtid via Trafiklab JSON
+ *********************************************************/
 
-// Ladda statiska hållplatser
-async function loadTrips() {
-    const res = await fetch("data/trips-901.json");
+const API_KEY = "d04e6df880fd4f33bd14a706425b0994";
+const ROUTE_NUMBER = "901";
+
+/* ===========================
+   STOPP-LISTA
+=========================== */
+
+const calls = [
+  { stop: { id: "740010760", name: "Karlstad Busstationen", direction: "SU" } },
+  { stop: { id: "740021275", name: "Karlstad Drottninggatan", direction: "U" } },
+  { stop: { id: "740022197", name: "Karlstad Residenstorget", direction: "B" } },
+  { stop: { id: "740057604", name: "Karlstad Stora Torget", direction: "B" } },
+  { stop: { id: "740022299", name: "Södra Kyrkogatan", direction: "B" } },
+  { stop: { id: "740023258", name: "Inre Hamn", direction: "B" } },
+  { stop: { id: "740075537", name: "Packhusallén", direction: "B" } },
+  { stop: { id: "740022244", name: "Nolgård", direction: "B" } },
+  { stop: { id: "740072181", name: "Jonsol Bytespunkt", direction: "B" } },
+  { stop: { id: "740036018", name: "Hammar", direction: "B" } },
+  { stop: { id: "740036019", name: "Hammarlunden", direction: "B" } },
+  { stop: { id: "740035993", name: "Hallersrudsvägen", direction: "B" } },
+  { stop: { id: "740022236", name: "Lövnäs Hammarö", direction: "R" } },
+  { stop: { id: "740025756", name: "Bryggerivägen", direction: "SR" } }
+];
+
+
+/* ===========================
+   BYGG RIKTNINGAR
+=========================== */
+
+function buildDirections() {
+
+    const outbound = calls
+        .filter(c => ["SU", "U", "B", "SR"].includes(c.stop.direction))
+        .map(c => c.stop.id);
+
+    const inbound = [...calls]
+        .reverse()
+        .filter(c => ["SR", "R", "B", "SU"].includes(c.stop.direction))
+        .map(c => c.stop.id);
+
+    return { outbound, inbound };
+}
+
+
+/* ===========================
+   RITA HÅLLPLATSER
+=========================== */
+
+function renderStops() {
+
+    const container = document.getElementById("line-container");
+    const total = calls.length;
+
+    calls.forEach((call, index) => {
+
+        const percent = (index / (total - 1)) * 100;
+
+        const stopEl = document.createElement("div");
+        stopEl.classList.add("stop");
+        stopEl.classList.add("main");
+        stopEl.style.top = percent + "%";
+        stopEl.textContent = call.stop.name;
+
+        container.appendChild(stopEl);
+    });
+}
+
+
+/* ===========================
+   HÄMTA REALTIME
+=========================== */
+
+async function fetchRealtime(stopId) {
+
+    const res = await fetch(
+        `https://realtime-api.trafiklab.se/v1/departures/${stopId}?key=${API_KEY}`
+    );
+
     return await res.json();
 }
 
-// Hämta livebussar från Trafiklab
-async function fetchRealtimeBuses() {
-    const url = `https://realtime-api.trafiklab.se/v1/vehiclepositions?key=${API_KEY}&lineRef=${LINE_ID}`;
-    try {
-        const res = await fetch(url);
-        const data = await res.json();
-        return data.vehicles.map(v => ({
-            vehicleRef: v.vehicleRef,
-            directionId: v.directionId,
-            lastStopId: v.lastStopId,
-            nextStopId: v.nextStopId
-        }));
-    } catch(e) {
-        console.error("Misslyckades hämta realtidsdata", e);
-        return [];
+
+/* ===========================
+   RITA BUSS
+=========================== */
+
+function drawBus(index, totalStops, side) {
+
+    const percent = (index / (totalStops - 1)) * 100;
+
+    const bus = document.createElement("div");
+    bus.classList.add("bus");
+
+    if (side === "left") {
+        bus.classList.add("bus-left");
+    } else {
+        bus.classList.add("bus-right");
+    }
+
+    bus.style.top = percent + "%";
+
+    document.getElementById("line-container").appendChild(bus);
+}
+
+
+/* ===========================
+   LADDA FORDON
+=========================== */
+
+async function loadVehicles() {
+
+    const { outbound, inbound } = buildDirections();
+
+    // Ta bort gamla bussar
+    document.querySelectorAll(".bus").forEach(b => b.remove());
+
+    for (const call of calls) {
+
+        try {
+
+            const data = await fetchRealtime(call.stop.id);
+
+            data.departures
+                .filter(d => d.route.designation === ROUTE_NUMBER)
+                .slice(0, 1)
+                .forEach(dep => {
+
+                    const stopId = call.stop.id;
+
+                    const outIndex = outbound.indexOf(stopId);
+                    const inIndex = inbound.indexOf(stopId);
+
+                    if (outIndex !== -1) {
+                        drawBus(outIndex, outbound.length, "left");
+                    }
+
+                    if (inIndex !== -1) {
+                        drawBus(inIndex, inbound.length, "right");
+                    }
+
+                });
+
+        } catch (err) {
+            console.error("Fel vid hämtning av stopp", call.stop.id);
+        }
     }
 }
 
-// Rita hållplatser med utskott för ensidiga stopp
-function drawStops(trips, container) {
-    const mainTrip = trips[0]; // Lövnäs → Karlstad som huvudlinje
-    const otherTrip = trips[1]; // Karlstad → Lövnäs
 
-    const step = HEIGHT / (mainTrip.calls.length - 1);
+/* ===========================
+   INIT
+=========================== */
 
-    mainTrip.calls.forEach((stop, i) => {
-        // Placera stopp på huvudlinje
-        const stopDiv = document.createElement("div");
-        stopDiv.className = "stop center";
-        stopDiv.style.top = `${i * step}px`;
-        stopDiv.innerText = stop.stop.name;
-        container.appendChild(stopDiv);
-
-        // Kolla om samma stopp finns i andra riktningen
-        const existsOther = otherTrip.calls.find(c => c.stop.id === stop.stop.id);
-        if (!existsOther) return;
-
-        // Inget nytt streck behövs, text finns redan
-    });
-
-    // Lägg till stopp från andra riktningen som inte finns på huvudlinjen
-    otherTrip.calls.forEach((stop, i) => {
-        const existsMain = mainTrip.calls.find(c => c.stop.id === stop.stop.id);
-        if (existsMain) return; // redan på linjen
-
-        const index = Math.floor(step * i); // ungefärlig position
-        // Rita streck
-        const streck = document.createElement("div");
-        streck.className = "streck";
-        streck.style.top = `${index}px`;
-        streck.style.left = "140px";
-        container.appendChild(streck);
-
-        // Text på höger sida
-        const stopDiv = document.createElement("div");
-        stopDiv.className = "stop right";
-        stopDiv.style.top = `${index - 8}px`;
-        stopDiv.innerText = stop.stop.name;
-        container.appendChild(stopDiv);
-    });
-}
-
-// Placera bussar på linjen
-function placeBuses(trips, buses, container) {
-    const mainTrip = trips[0];
-    const step = HEIGHT / (mainTrip.calls.length - 1);
-
-    buses.forEach(bus => {
-        const trip = bus.directionId === 1
-            ? trips[0] // mot Karlstad
-            : trips[1]; // mot Lövnäs
-
-        const calls = trip.calls;
-        const prevIndex = calls.findIndex(c => c.stop.id === bus.lastStopId);
-        const nextIndex = calls.findIndex(c => c.stop.id === bus.nextStopId);
-        const pos = (prevIndex >= 0 && nextIndex >= 0)
-            ? step * (prevIndex + 0.5) // mellan två hållplatser
-            : 0;
-
-        const busDiv = document.createElement("div");
-        busDiv.className = bus.directionId === 1 ? "bus bus-left" : "bus bus-right";
-        busDiv.style.top = `${pos}px`;
-        busDiv.innerHTML = bus.directionId === 1 ? "↑" : "↓";
-        container.appendChild(busDiv);
-    });
-}
-
-// Render-loop
-async function renderLine() {
-    const container = document.getElementById("line-container");
-    container.innerHTML = '<div class="line" id="line"></div>';
-
-    const trips = await loadTrips();
-    drawStops(trips, container);
-
-    const buses = await fetchRealtimeBuses();
-    placeBuses(trips, buses, container);
-
-    setTimeout(renderLine, 30000);
-}
-
-renderLine();
+renderStops();
+loadVehicles();
+setInterval(loadVehicles, 60000);
