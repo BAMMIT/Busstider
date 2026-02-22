@@ -36,7 +36,7 @@ function buildRow(item) {
         }
     }
 
-    return `
+    return 
        <div class="bus-item"> 
            <div> 
                <div class="bus-line">Linje ${item.route.designation}</div> 
@@ -45,7 +45,7 @@ function buildRow(item) {
                <div class="bus-time ${statusClass}"> ${timeText} </div>
                <div class="scheduled-time"> Tidtabell: ${scheduled} </div> 
            </div>
-    `;
+    ;
 }
 
 async function fetchStop(stopId) {
