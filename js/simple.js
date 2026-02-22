@@ -81,15 +81,25 @@ async function loadData() {
             const data = await fetchStop(stop);
             const stopName = data.stops[0]?.name || "Hållplats";
 
-            let html = `<div class="stop-card"><div class="stop-header">Ankomster & Avgångar – ${stopName}</div>`;
+let html = `
+    <div class="stop-header">
+        Ankomster & Avgångar – ${stopName}
+    </div>
 
-            html += `<div class="column-title">Ankomster</div>`;
-            data.arrivals.slice(0,6).forEach(item => html += buildRow(item));
+    <div class="column-title">Ankomster</div>
+`;
 
-            html += `<div class="column-title">Avgångar</div>`;
-            data.departures.slice(0,6).forEach(item => html += buildRow(item));
+data.arrivals.slice(0,6).forEach(item => {
+    html += `<div class="stop-card">${buildRow(item)}</div>`;
+});
 
-            html += `</div>`;
+html += `
+    <div class="column-title">Avgångar</div>
+`;
+
+data.departures.slice(0,6).forEach(item => {
+    html += `<div class="stop-card">${buildRow(item)}</div>`;
+});
             container.innerHTML += html;
 
         } catch {
