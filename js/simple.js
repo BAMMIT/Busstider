@@ -36,16 +36,23 @@ function buildRow(item) {
         }
     }
 
-    return 
-       <div class="bus-item"> 
-           <div> 
-               <div class="bus-line">Linje ${item.route.designation}</div> 
-               <div class="bus-direction">Mot ${item.route.direction}</div>    
-           </div> 
-               <div class="bus-time ${statusClass}"> ${timeText} </div>
-               <div class="scheduled-time"> Tidtabell: ${scheduled} </div> 
-           </div>
-    ;
+    return `
+        <div class="bus-item">
+            <div>
+                <div class="bus-line">Linje ${item.route.designation}</div>
+                <div class="bus-direction">Mot ${item.route.direction}</div>
+            </div>
+            
+            <div class="bus-time">
+                <div class="realtime ${statusClass}">
+                    ${timeText}
+                </div>
+            <div class="scheduled-time">
+                Tidtabell: ${scheduled}
+            </div>
+</div>
+        </div>
+    `;
 }
 
 async function fetchStop(stopId) {
