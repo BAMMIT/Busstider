@@ -91,4 +91,4 @@ async function loadData() {
 }
 
 loadData();
-setInterval(loadData, 30000);
+setInterval(loadData, 60000);
