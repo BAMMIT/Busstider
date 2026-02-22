@@ -18,7 +18,7 @@ const STOPS = [
 
 async function fetchDepartures(stop) {
   try {
-    const url = `https://realtime-api.trafiklab.se/v1/departures?originId=${stop.id}&key=${API_KEY}`;
+    const url = `https://realtime-api.trafiklab.se/v1/departures?${stop.id}&key=${API_KEY}`;
     const response = await fetch(url);
     const data = await response.json();
 
