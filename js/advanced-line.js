@@ -51,7 +51,7 @@ function buildLine() {
 
 async function fetchDepartures(stopId) {
 
-  const url = `https://api.trafiklab.se/samtrafiken/departures.json?originId=${stopId}&key=${API_KEY}`;
+  const url = `https://realtime-api.trafiklab.se/v1/departures?originId=${stopId}&key=${API_KEY}`;
 
   const response = await fetch(url);
   const data = await response.json();
