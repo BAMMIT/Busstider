@@ -11,6 +11,24 @@ h2 {
     text-align: center;
 }
 
+.stop-card {
+    max-width: 650px;
+    margin: 20px auto;
+}
+
+.stop-header {
+    font-size: 22px;
+    font-weight: 700;
+    margin-bottom: 15px;
+}
+
+.footer {
+    text-align: center;
+    margin-top: 30px;
+    font-size: 13px;
+    color: #6b7280;
+}
+
 /* Bus-card styling (för simple-lista) */
 .bus-card {
     font-family: system-ui, sans-serif;
@@ -52,20 +70,24 @@ h2 {
 
 /* === Realtidsfärger (simple.js) === */
 
-.bus-time.early {
-    color: #16a34a; /* grön */
+.bus-time.on-time {
+    color: #16a34a; /* grön = i tid */
     font-weight: 600;
 }
 
 .bus-time.late {
-    color: #dc2626; /* röd */
+    color: #dc2626; /* röd = sen */
     font-weight: 600;
 }
 
-.bus-time.ontime {
+.bus-time.static {
     color: #111; /* svart */
 }
 
+.bus-time.canceled {
+    color: #6b7280;
+    text-decoration: line-through;
+}
 .bus-destination {
     font-size: 12px;
     color: #555;
