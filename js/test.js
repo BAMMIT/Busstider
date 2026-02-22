@@ -6,10 +6,20 @@ const API_KEY = "d04e6df880fd4f33bd14a706425b0994"; // Byt mot din nyckel
 const LINE_NUMBER = "901";
 
 const STOPS = [
-  { id: "740010760", name: "Karlstad Busstationen" },
-  { id: "740021275", name: "Karlstad Drottninggatan" },
-  { id: "740022197", name: "Karlstad Residenstorget" },
-  { id: "740057604", name: "Karlstad Stora Torget" }
+  { id: "740010760", name: "Karlstad Busstationen", direction: "SU" },
+  { id: "740021275", name: "Karlstad Drottninggatan", direction: "U" },
+  { id: "740022197", name: "Karlstad Residenstorget", direction: "B" },
+  { id: "740057604", name: "Karlstad Stora Torget", direction: "B" },
+  { id: "740022299", name: "Södra Kyrkogatan", direction: "B" },
+  { id: "740023258", name: "Inre Hamn", direction: "B" },
+  { id: "740075537", name: "Packhusallén", direction: "B" },
+  { id: "740022244", name: "Nolgård", direction: "B" },
+  { id: "740072181", name: "Jonsol Bytespunkt", direction: "B" },
+  { id: "740036018", name: "Hammar", direction: "B" },
+  { id: "740036019", name: "Hammarlunden", direction: "B" },
+  { id: "740035993", name: "Hallersrudsvägen", direction: "B" },
+  { id: "740022236", name: "Lövnäs Hammarö", direction: "R" },
+  { id: "740025756", name: "Bryggerivägen", direction: "SR" }
 ];
 
 // ==============================
