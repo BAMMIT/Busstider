@@ -2,102 +2,114 @@
 /* ================= SIMPLE / INDEX ==================== */
 /* ===================================================== */
 
+/* ===================================================== */
+/* ================= SIMPLE / INDEX ==================== */
+/* ===================================================== */
+
 body {
     font-family: system-ui, sans-serif;
     margin: 20px;
 }
 
-h2 {
-    text-align: center;
-}
+/* ===== STOP CARD ===== */
 
 .stop-card {
     max-width: 650px;
-    margin: 20px auto;
+    margin: 30px auto;
+    padding: 20px;
+    border-radius: 14px;
+    background: #ffffff;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.05);
 }
 
 .stop-header {
     font-size: 22px;
     font-weight: 700;
-    margin-bottom: 15px;
+    color: #000;
+    margin-bottom: 20px;
 }
+
+/* ===== COLUMN TITLES ===== */
 
 .column-title {
-    font-size: 14px;
-    font-weight: 600;
-    margin: 15px 0 8px 0;
-    color: #374151;
+    font-size: 16px;
+    font-weight: 700;
+    color: #000;
+    margin: 20px 0 10px 0;
 }
 
-.footer {
-    text-align: center;
-    margin-top: 30px;
-    font-size: 13px;
-    color: #6b7280;
-}
-
-/* Bus-card styling (för simple-lista) */
-.bus-card {
-    font-family: system-ui, sans-serif;
-    max-width: 650px;
-    margin: 20px auto;
-}
-
-.bus-header {
-    font-size: 20px;
-    font-weight: bold;
-    margin-bottom: 15px;
-}
+/* ===== BUS ROW ===== */
 
 .bus-item {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 14px;
-    border-radius: 10px;
-    background: #f8fafc;
-    margin-bottom: 10px;
-    transition: 0.2s ease;
+    padding: 14px 0;
+    border-bottom: 1px solid #e5e7eb;
 }
 
-.bus-item:hover {
-    background: #eef2f7;
+.bus-item:last-child {
+    border-bottom: none;
 }
+
+/* ===== LEFT SIDE ===== */
 
 .bus-line {
-    font-weight: 600;
-    font-size: 18px;
-    font-weight: bold;
+    font-size: 16px;
+    font-weight: 400;   /* Normal textstorlek */
+    color: #000;
 }
 
+.bus-direction {
+    font-size: 13px;    /* Mindre */
+    color: #000;
+    margin-top: 2px;
+}
+
+/* ===== RIGHT SIDE ===== */
+
 .bus-time {
-    font-size: 18px;
+    text-align: right;
+    font-size: 16px;   /* Normal */
+    font-weight: 400;
+}
+
+/* Realtidsfärger – matchar simple.js */
+
+.bus-time.on-time {
+    color: #16a34a; /* GRÖN */
     font-weight: 500;
 }
 
-/* === Realtidsfärger (simple.js) === */
-
-.bus-time.on-time {
-    color: #16a34a; /* grön = i tid */
-    font-weight: 600;
-}
-
 .bus-time.late {
-    color: #dc2626; /* röd = sen */
-    font-weight: 600;
+    color: #dc2626; /* RÖD */
+    font-weight: 500;
 }
 
 .bus-time.static {
-    color: #111; /* svart */
+    color: #000;
 }
 
 .bus-time.canceled {
     color: #6b7280;
     text-decoration: line-through;
 }
-.bus-destination {
-    font-size: 12px;
-    color: #555;
+
+/* Tidtabellstid */
+
+.scheduled-time {
+    font-size: 13px;
+    color: #000;
+    margin-top: 2px;
+}
+
+/* ===== FOOTER ===== */
+
+.footer {
+    text-align: center;
+    margin-top: 40px;
+    font-size: 13px;
+    color: #6b7280;
 }
 
 
