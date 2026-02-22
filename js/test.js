@@ -57,7 +57,7 @@ if (!container) {
   return;
 }
   
-  const container = document.getElementById("departures");
+//  const container = document.getElementById("departures");
   container.innerHTML = "";
 
   for (const stop of STOPS) {
