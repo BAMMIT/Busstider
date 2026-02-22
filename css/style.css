@@ -23,6 +23,7 @@ body {
 }
 
 .stop-header {
+    max-width: 650px;
     font-size: 22px;
     font-weight: 700;
     color: #000;
@@ -32,6 +33,7 @@ body {
 /* ===== COLUMN TITLES ===== */
 
 .column-title {
+    max-width: 650px;
     font-size: 16px;
     font-weight: 700;
     color: #000;
