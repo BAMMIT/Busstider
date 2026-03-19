@@ -1,4 +1,3 @@
-
 const API_KEY = "d04e6df880fd4f33bd14a706425b0994"; // Byt mot din nyckel
 
 function getParams() {
