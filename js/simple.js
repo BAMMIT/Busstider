@@ -1,4 +1,7 @@
-const API_KEY = SECRET_API_KEY; //"d04e6df880fd4f33bd14a706425b0994"; // Byt mot din nyckel
+require('dotenv').config();
+const API_KEY = process.env.API_KEY;
+
+//const API_KEY = SECRET_API_KEY; //"d04e6df880fd4f33bd14a706425b0994"; // Byt mot din nyckel
 
 function getParams() {
     const params = new URLSearchParams(window.location.search);
