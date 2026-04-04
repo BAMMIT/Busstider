@@ -17,7 +17,8 @@
 
     <nav id="nav-menu">
       <a href="#home">Hem</a>
-      <a href="#about">Om</a>
+      <a href="#about">Paket</a>
+      <a href="#blog">Blogg</a>
       <a href="#contact" class="btn-primary small">Contact</a>
     </nav>
 
@@ -26,11 +27,10 @@
 </header>
 
 <section id="home" class="hero reveal">
-  <div class="container hero-content">
+  <div class="container">
     <h1>
       Välkommen till <span class="text-gradient">Bekvämligheten</span>
     </h1>
-
     <p>Vi hjälper dig med att förenkla din vardag</p>
 
     <div class="hero-buttons">
@@ -40,6 +40,7 @@
   </div>
 </section>
 
+<!-- PAKET -->
 <section id="about" class="about reveal">
   <div class="container">
     <h2>Våra <span class="text-secondary">Paket</span></h2>
@@ -54,8 +55,7 @@
         <h3>Bas</h3>
         <ul>
           <li>✔ Rådgivning via mail</li>
-          <li>✔ Tillgång till mallar</li>
-          <li>✔ Dokumentbibliotek</li>
+          <li>✔ Mallar & dokumentbibliotek</li>
           <li>✔ Löpande uppdateringar</li>
         </ul>
         <button class="btn-outline full">Välj Bas</button>
@@ -67,7 +67,7 @@
           <li>✔ Allt i Bas</li>
           <li>✔ Rådgivning via telefon</li>
           <li>✔ Utökat dokumentbibliotek</li>
-          <li>✔ Prioriterad support</li>
+          <li>✔ Prioriterad tillgänglighet</li>
         </ul>
         <button class="btn-primary full">Välj Plus</button>
       </div>
@@ -85,6 +85,43 @@
   </div>
 </section>
 
+<!-- BLOG -->
+<section id="blog" class="blog reveal">
+  <div class="container">
+    <h2>Senaste <span class="text-primary">Insikter</span></h2>
+
+    <p class="section-subtitle">
+      Håll dig uppdaterad med senaste informationen
+    </p>
+
+    <div class="card-grid">
+
+      <div class="card reveal">
+        <span class="badge">Innovation</span>
+        <h3>Framtidssäkrad teknik</h3>
+        <p>Se hur vi bygger för framtiden.</p>
+        <a href="#post1">Läs mer →</a>
+      </div>
+
+      <div class="card reveal">
+        <span class="badge">Företaget</span>
+        <h3>Vår resa</h3>
+        <p>Hur vi byggt upp BAMMIT.</p>
+        <a href="#post2">Läs mer →</a>
+      </div>
+
+      <div class="card reveal">
+        <span class="badge">Framtiden</span>
+        <h3>Nästa steg</h3>
+        <p>Vad händer härnäst?</p>
+        <a href="#post3">Läs mer →</a>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- CONTACT -->
 <section id="contact" class="contact reveal">
   <div class="container">
     <h2>Contact Us</h2>
@@ -111,10 +148,8 @@
 
   const revealOnScroll = () => {
     reveals.forEach(el => {
-      const windowHeight = window.innerHeight;
-      const elementTop = el.getBoundingClientRect().top;
-
-      if (elementTop < windowHeight - 80) {
+      const top = el.getBoundingClientRect().top;
+      if (top < window.innerHeight - 80) {
         el.classList.add("active");
       }
     });
