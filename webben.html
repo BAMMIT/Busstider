@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Bammit</title>
+
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/webben.css" />
+</head>
+
+<body>
+
+<header class="navbar">
+  <div class="container nav-content">
+    <div class="logo text-primary">BAMMIT</div>
+
+    <nav id="nav-menu">
+      <a href="#home">Hem</a>
+      <a href="#about">Om</a>
+      <a href="#blog">Blogg</a>
+      <a href="#contact" class="btn-primary small">Contact</a>
+    </nav>
+
+    <button id="menu-toggle" class="menu-toggle">☰</button>
+  </div>
+</header>
+
+<section id="home" class="hero">
+  <div class="container hero-content">
+    <h1>
+      Välkommen till <span class="text-gradient">Bekvämligheten</span>
+    </h1>
+
+    <p>Vi hjälper dig med att förenkla din vardag</p>
+
+    <div class="hero-buttons">
+      <button class="btn-primary">Kom igång →</button>
+      <button class="btn-outline">Mer Information</button>
+    </div>
+  </div>
+</section>
+
+<section id="about" class="about">
+  <div class="container">
+    <h2>Om <span class="text-secondary">BAMMIT</span></h2>
+    <p class="section-subtitle">
+      SQL Server - Lite enklare - Lite bekvämare
+    </p>
+
+    <div class="card-grid">
+      <div class="card">
+        <div class="icon bg-gradient"></div>
+        <h3>Kontroll</h3>
+        <p>Vi skapar trygghet, ordning och reda.</p>
+      </div>
+
+      <div class="card">
+        <div class="icon bg-gradient"></div>
+        <h3>Enkelhet</h3>
+        <p>Lätt att nå - Lätt att förstå.</p>
+      </div>
+
+      <div class="card">
+        <div class="icon bg-gradient"></div>
+        <h3>Framtidssäkrat</h3>
+        <p>Lösningar som är förvaltningsbara även i framtiden.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="blog" class="blog">
+  <div class="container">
+    <h2>Latest <span class="text-primary">Insikter</span></h2>
+    <p class="section-subtitle">
+      Håll dig uppdaterad med senaste informationen.
+    </p>
+
+    <div class="card-grid">
+      <div class="card">
+        <span class="badge">Innovation</span>
+        <h3>Framtidssäkrad teknik</h3>
+        <p>Se hur vi bygger för framtiden.</p>
+      </div>
+
+      <div class="card">
+        <span class="badge">Företaget</span>
+        <h3>Vår resa så här långt</h3>
+        <p>A look back at our milestones.</p>
+      </div>
+
+      <div class="card">
+        <span class="badge">Framtiden</span>
+        <h3>Nästa steg framåt</h3>
+        <p>Vad kommer härnäst?</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="contact" class="contact">
+  <div class="container">
+    <h2>Contact Us</h2>
+    <p class="section-subtitle">We'd love to hear from you</p>
+
+    <form action="https://formsubmit.co/joakim.bang@outlook.com" method="POST">
+      <input type="text" name="name" placeholder="Your Name" required>
+      <input type="email" name="email" placeholder="Your Email" required>
+      <textarea name="message" rows="5" placeholder="Your Message" required></textarea>
+      <button type="submit" class="btn-primary">Send Message</button>
+    </form>
+  </div>
+</section>
+
+<script>
+  const toggle = document.getElementById("menu-toggle");
+  const nav = document.getElementById("nav-menu");
+
+  toggle.addEventListener("click", () => {
+    nav.classList.toggle("active");
+  });
+</script>
+
+</body>
+</html>
