@@ -20,7 +20,29 @@
 <section class="blog reveal">
   <div class="container">
     <h1>Alla blogginlägg</h1>
-    <div id="all-posts" class="card-grid"></div>
+
+    <div class="card-grid">
+      <div class="card reveal">
+        <h3>Prestanda i SQL Server</h3>
+        <p>Full artikel om prestandaoptimering i SQL Server...</p>
+        <small>2026-04-01</small>
+      </div>
+      <div class="card reveal">
+        <h3>Index du måste ha</h3>
+        <p>Full artikel om de viktigaste indexen...</p>
+        <small>2026-03-25</small>
+      </div>
+      <div class="card reveal">
+        <h3>Backup strategi</h3>
+        <p>Full artikel om backup-strategier...</p>
+        <small>2026-03-20</small>
+      </div>
+      <div class="card reveal">
+        <h3>Säkerhetskopieringstips</h3>
+        <p>Full artikel med tips för säkerhetskopiering...</p>
+        <small>2026-03-15</small>
+      </div>
+    </div>
   </div>
 </section>
 
@@ -31,23 +53,6 @@
 </footer>
 
 <script>
-// BLOG ALLA INLÄGG
-fetch('blog.json')
-  .then(res => res.json())
-  .then(data => {
-    data.sort((a,b) => new Date(b.date) - new Date(a.date));
-    const container = document.getElementById("all-posts");
-    data.forEach(post => {
-      container.innerHTML += `
-        <div class="card reveal">
-          <h3>${post.title}</h3>
-          <p>${post.content}</p>
-          <small>${post.date}</small>
-        </div>
-      `;
-    });
-  });
-
 // REVEAL ANIMATION
 const reveals = document.querySelectorAll(".reveal");
 const revealOnScroll = () => {
