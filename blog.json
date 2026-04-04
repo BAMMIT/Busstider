@@ -3,18 +3,24 @@
     "title": "Prestanda i SQL Server",
     "date": "2026-04-01",
     "excerpt": "Så optimerar du din SQL Server...",
-    "content": "Lorem ipsum full text här..."
+    "content": "Full artikel om prestandaoptimering i SQL Server..."
   },
   {
     "title": "Index du måste ha",
     "date": "2026-03-25",
     "excerpt": "De viktigaste indexen...",
-    "content": "Lorem ipsum full text..."
+    "content": "Full artikel om de viktigaste indexen..."
   },
   {
     "title": "Backup strategi",
     "date": "2026-03-20",
     "excerpt": "Så skyddar du din data...",
-    "content": "Lorem ipsum..."
+    "content": "Full artikel om backup-strategier..."
+  },
+  {
+    "title": "Säkerhetskopieringstips",
+    "date": "2026-03-15",
+    "excerpt": "Tips för säker SQL-data...",
+    "content": "Full artikel med tips för säkerhetskopiering..."
   }
 ]
