@@ -18,7 +18,6 @@
     <nav id="nav-menu">
       <a href="#home">Hem</a>
       <a href="#about">Om</a>
-      <a href="#blog">Blogg</a>
       <a href="#contact" class="btn-primary small">Contact</a>
     </nav>
 
@@ -43,58 +42,45 @@
 
 <section id="about" class="about reveal">
   <div class="container">
-    <h2>Om <span class="text-secondary">BAMMIT</span></h2>
+    <h2>Våra <span class="text-secondary">Paket</span></h2>
+
     <p class="section-subtitle">
       SQL Server - Lite enklare - Lite bekvämare
     </p>
 
     <div class="card-grid">
+
       <div class="card reveal">
-        <div class="icon"></div>
-        <h3>Kontroll</h3>
-        <p>Vi skapar trygghet, ordning och reda.</p>
+        <h3>Bas</h3>
+        <ul>
+          <li>✔ Rådgivning via mail</li>
+          <li>✔ Tillgång till mallar</li>
+          <li>✔ Dokumentbibliotek</li>
+          <li>✔ Löpande uppdateringar</li>
+        </ul>
+        <button class="btn-outline full">Välj Bas</button>
+      </div>
+
+      <div class="card highlight reveal">
+        <h3>Plus</h3>
+        <ul>
+          <li>✔ Allt i Bas</li>
+          <li>✔ Rådgivning via telefon</li>
+          <li>✔ Utökat dokumentbibliotek</li>
+          <li>✔ Prioriterad support</li>
+        </ul>
+        <button class="btn-primary full">Välj Plus</button>
       </div>
 
       <div class="card reveal">
-        <div class="icon"></div>
-        <h3>Enkelhet</h3>
-        <p>Lätt att nå - Lätt att förstå.</p>
+        <h3>Timbank</h3>
+        <ul>
+          <li>✔ Allt i Plus</li>
+          <li>✔ Rabatterat timpris</li>
+        </ul>
+        <button class="btn-outline full">Välj Timbank</button>
       </div>
 
-      <div class="card reveal">
-        <div class="icon"></div>
-        <h3>Framtidssäkrat</h3>
-        <p>Lösningar som är förvaltningsbara även i framtiden.</p>
-      </div>
-    </div>
-  </div>
-</section>
-
-<section id="blog" class="blog reveal">
-  <div class="container">
-    <h2>Latest <span class="text-primary">Insikter</span></h2>
-    <p class="section-subtitle">
-      Håll dig uppdaterad med senaste informationen.
-    </p>
-
-    <div class="card-grid">
-      <div class="card reveal">
-        <span class="badge">Innovation</span>
-        <h3>Framtidssäkrad teknik</h3>
-        <p>Se hur vi bygger för framtiden.</p>
-      </div>
-
-      <div class="card reveal">
-        <span class="badge">Företaget</span>
-        <h3>Vår resa så här långt</h3>
-        <p>A look back at our milestones.</p>
-      </div>
-
-      <div class="card reveal">
-        <span class="badge">Framtiden</span>
-        <h3>Nästa steg framåt</h3>
-        <p>Vad kommer härnäst?</p>
-      </div>
     </div>
   </div>
 </section>
@@ -114,7 +100,6 @@
 </section>
 
 <script>
-  // Mobile menu
   const toggle = document.getElementById("menu-toggle");
   const nav = document.getElementById("nav-menu");
 
@@ -122,7 +107,6 @@
     nav.classList.toggle("active");
   });
 
-  // Scroll animation
   const reveals = document.querySelectorAll(".reveal");
 
   const revealOnScroll = () => {
