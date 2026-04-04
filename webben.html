@@ -26,7 +26,7 @@
   </div>
 </header>
 
-<section id="home" class="hero">
+<section id="home" class="hero reveal">
   <div class="container hero-content">
     <h1>
       Välkommen till <span class="text-gradient">Bekvämligheten</span>
@@ -41,7 +41,7 @@
   </div>
 </section>
 
-<section id="about" class="about">
+<section id="about" class="about reveal">
   <div class="container">
     <h2>Om <span class="text-secondary">BAMMIT</span></h2>
     <p class="section-subtitle">
@@ -49,20 +49,20 @@
     </p>
 
     <div class="card-grid">
-      <div class="card">
-        <div class="icon bg-gradient"></div>
+      <div class="card reveal">
+        <div class="icon"></div>
         <h3>Kontroll</h3>
         <p>Vi skapar trygghet, ordning och reda.</p>
       </div>
 
-      <div class="card">
-        <div class="icon bg-gradient"></div>
+      <div class="card reveal">
+        <div class="icon"></div>
         <h3>Enkelhet</h3>
         <p>Lätt att nå - Lätt att förstå.</p>
       </div>
 
-      <div class="card">
-        <div class="icon bg-gradient"></div>
+      <div class="card reveal">
+        <div class="icon"></div>
         <h3>Framtidssäkrat</h3>
         <p>Lösningar som är förvaltningsbara även i framtiden.</p>
       </div>
@@ -70,7 +70,7 @@
   </div>
 </section>
 
-<section id="blog" class="blog">
+<section id="blog" class="blog reveal">
   <div class="container">
     <h2>Latest <span class="text-primary">Insikter</span></h2>
     <p class="section-subtitle">
@@ -78,19 +78,19 @@
     </p>
 
     <div class="card-grid">
-      <div class="card">
+      <div class="card reveal">
         <span class="badge">Innovation</span>
         <h3>Framtidssäkrad teknik</h3>
         <p>Se hur vi bygger för framtiden.</p>
       </div>
 
-      <div class="card">
+      <div class="card reveal">
         <span class="badge">Företaget</span>
         <h3>Vår resa så här långt</h3>
         <p>A look back at our milestones.</p>
       </div>
 
-      <div class="card">
+      <div class="card reveal">
         <span class="badge">Framtiden</span>
         <h3>Nästa steg framåt</h3>
         <p>Vad kommer härnäst?</p>
@@ -99,7 +99,7 @@
   </div>
 </section>
 
-<section id="contact" class="contact">
+<section id="contact" class="contact reveal">
   <div class="container">
     <h2>Contact Us</h2>
     <p class="section-subtitle">We'd love to hear from you</p>
@@ -114,12 +114,30 @@
 </section>
 
 <script>
+  // Mobile menu
   const toggle = document.getElementById("menu-toggle");
   const nav = document.getElementById("nav-menu");
 
   toggle.addEventListener("click", () => {
     nav.classList.toggle("active");
   });
+
+  // Scroll animation
+  const reveals = document.querySelectorAll(".reveal");
+
+  const revealOnScroll = () => {
+    reveals.forEach(el => {
+      const windowHeight = window.innerHeight;
+      const elementTop = el.getBoundingClientRect().top;
+
+      if (elementTop < windowHeight - 80) {
+        el.classList.add("active");
+      }
+    });
+  };
+
+  window.addEventListener("scroll", revealOnScroll);
+  revealOnScroll();
 </script>
 
 </body>
