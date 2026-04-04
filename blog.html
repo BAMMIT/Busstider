@@ -1,0 +1,23 @@
+<div id="all-posts" class="card-grid"></div>
+
+<script>
+fetch('blog.json')
+  .then(res => res.json())
+  .then(data => {
+
+    data.sort((a, b) => new Date(b.date) - new Date(a.date));
+
+    const container = document.getElementById("all-posts");
+
+    data.forEach(post => {
+      container.innerHTML += `
+        <div class="card">
+          <h3>${post.title}</h3>
+          <p>${post.content}</p>
+          <small>${post.date}</small>
+        </div>
+      `;
+    });
+
+  });
+</script>
