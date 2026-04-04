@@ -14,97 +14,127 @@
 <header class="navbar">
   <div class="container nav-content">
     <div class="logo">BAMMIT</div>
-
     <nav id="nav-menu">
       <a href="#home">Hem</a>
       <a href="#about">Paket</a>
       <a href="blog.html">Blogg</a>
       <a href="#contact">Contact</a>
     </nav>
-
     <button id="menu-toggle" class="menu-toggle">☰</button>
   </div>
 </header>
 
+<!-- HERO -->
 <section id="home" class="hero reveal">
   <div class="container">
     <h1>Välkommen till <span class="text-gradient">Bekvämligheten</span></h1>
     <p>Vi hjälper dig med att förenkla din vardag</p>
-  </div>
-</section>
-
-<section id="about" class="about reveal">
-  <div class="container">
-    <h2>Våra Paket</h2>
-
-    <div class="card-grid">
-      <div class="card"><h3>Bas</h3></div>
-      <div class="card"><h3>Plus</h3></div>
-      <div class="card"><h3>Timbank</h3></div>
+    <div class="hero-buttons">
+      <button class="btn-primary">Kom igång →</button>
+      <button class="btn-outline">Mer Information</button>
     </div>
   </div>
 </section>
 
-<!-- BLOG (3 senaste) -->
-<section class="blog reveal">
+<!-- PAKET -->
+<section id="about" class="about reveal">
   <div class="container">
-    <h2>Senaste inlägg</h2>
+    <h2>Våra Paket</h2>
+    <p class="section-subtitle">SQL Server - Lite enklare - Lite bekvämare</p>
 
-    <div id="latest-posts" class="card-grid"></div>
+    <div class="card-grid">
+      <div class="card reveal">
+        <h3>Bas</h3>
+        <ul>
+          <li>Rådgivning via mail</li>
+          <li>Tillgång till mallar och dokumentbibliotek</li>
+          <li>Löpande information om uppdateringar</li>
+        </ul>
+      </div>
 
-    <br>
-    <a href="blog.html">Se alla inlägg →</a>
+      <div class="card reveal">
+        <h3>Plus</h3>
+        <ul>
+          <li>Allt i Bas</li>
+          <li>Rådgivning via telefon</li>
+          <li>Tillgång till utökat dokumentbibliotek</li>
+          <li>Prioriterad tillgänglighet</li>
+        </ul>
+      </div>
+
+      <div class="card reveal">
+        <h3>Timbank</h3>
+        <ul>
+          <li>Allt i Plus</li>
+          <li>Rabatterat timpris</li>
+        </ul>
+      </div>
+    </div>
   </div>
 </section>
 
+<!-- BLOGG (3 senaste) -->
+<section id="blog" class="blog reveal">
+  <div class="container">
+    <h2>Senaste inlägg</h2>
+    <p class="section-subtitle">Håll dig uppdaterad med senaste informationen</p>
+
+    <div id="latest-posts" class="card-grid"></div>
+    <div class="center">
+      <a href="blog.html" class="btn-outline">Visa alla inlägg</a>
+    </div>
+  </div>
+</section>
+
+<!-- CONTACT -->
 <section id="contact" class="contact reveal">
   <div class="container">
     <h2>Contact</h2>
+    <p class="section-subtitle">Vi vill höra från dig</p>
 
-    <form>
-      <input type="text" placeholder="Namn">
-      <input type="email" placeholder="Email">
-      <textarea placeholder="Meddelande"></textarea>
-      <button class="btn-primary">Skicka</button>
+    <form action="https://formsubmit.co/joakim.bang@outlook.com" method="POST">
+      <input type="text" name="name" placeholder="Ditt namn" required>
+      <input type="email" name="email" placeholder="Din email" required>
+      <textarea name="message" rows="5" placeholder="Ditt meddelande" required></textarea>
+      <button type="submit" class="btn-primary">Skicka</button>
     </form>
   </div>
 </section>
 
+<!-- FOOTER -->
 <footer class="footer">
   <div class="container footer-content">
     <div>
       <h3>BAMMIT</h3>
-      <p>SQL Server - Lite enklare</p>
+      <p>SQL Server - Lite enklare - Lite bekvämare</p>
     </div>
 
     <div>
-      <p>info@bammit.se</p>
-      <p>070-1234567</p>
+      <p>📧 info@bammit.se</p>
+      <p>📞 070-123 45 67</p>
+      <p>📍 Sverige</p>
+    </div>
+
+    <div>
+      <p>© 2026 BAMMIT</p>
     </div>
   </div>
 </footer>
 
 <script>
-// MENU
+// MENU TOGGLE
 const toggle = document.getElementById("menu-toggle");
 const nav = document.getElementById("nav-menu");
+toggle.addEventListener("click", () => nav.classList.toggle("active"));
 
-toggle.addEventListener("click", () => {
-  nav.classList.toggle("active");
-});
-
-// SCROLL ANIMATION
+// REVEAL ANIMATION
 const reveals = document.querySelectorAll(".reveal");
-
 const revealOnScroll = () => {
   reveals.forEach(el => {
     const top = el.getBoundingClientRect().top;
-    if (top < window.innerHeight - 80) {
-      el.classList.add("active");
-    }
+    if(top < window.innerHeight - 80) el.classList.add("active");
   });
 };
-
 window.addEventListener("scroll", revealOnScroll);
 revealOnScroll();
 
@@ -112,24 +142,19 @@ revealOnScroll();
 fetch('blog.json')
   .then(res => res.json())
   .then(data => {
-
-    data.sort((a, b) => new Date(b.date) - new Date(a.date));
-    const latest = data.slice(0, 3);
-
+    data.sort((a,b) => new Date(b.date) - new Date(a.date));
+    const latest = data.slice(0,3);
     const container = document.getElementById("latest-posts");
-
     latest.forEach(post => {
       container.innerHTML += `
-        <div class="card">
+        <div class="card reveal">
           <h3>${post.title}</h3>
           <p>${post.excerpt}</p>
           <small>${post.date}</small>
         </div>
       `;
     });
-
   });
 </script>
-
 </body>
 </html>
