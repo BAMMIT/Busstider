@@ -1,23 +1,64 @@
-<div id="all-posts" class="card-grid"></div>
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Blogg</title>
+  <link rel="stylesheet" href="webben.css">
+</head>
+<body>
+
+<header class="navbar">
+  <div class="container nav-content">
+    <div class="logo">BAMMIT</div>
+    <nav>
+      <a href="webben.html">Hem</a>
+    </nav>
+  </div>
+</header>
+
+<section class="blog reveal">
+  <div class="container">
+    <h1>Alla blogginlägg</h1>
+    <div id="all-posts" class="card-grid"></div>
+  </div>
+</section>
+
+<footer class="footer">
+  <div class="container footer-content">
+    <p>© 2026 BAMMIT</p>
+  </div>
+</footer>
 
 <script>
+// BLOG ALLA INLÄGG
 fetch('blog.json')
   .then(res => res.json())
   .then(data => {
-
-    data.sort((a, b) => new Date(b.date) - new Date(a.date));
-
+    data.sort((a,b) => new Date(b.date) - new Date(a.date));
     const container = document.getElementById("all-posts");
-
     data.forEach(post => {
       container.innerHTML += `
-        <div class="card">
+        <div class="card reveal">
           <h3>${post.title}</h3>
           <p>${post.content}</p>
           <small>${post.date}</small>
         </div>
       `;
     });
-
   });
+
+// REVEAL ANIMATION
+const reveals = document.querySelectorAll(".reveal");
+const revealOnScroll = () => {
+  reveals.forEach(el => {
+    const top = el.getBoundingClientRect().top;
+    if(top < window.innerHeight - 80) el.classList.add("active");
+  });
+};
+window.addEventListener("scroll", revealOnScroll);
+revealOnScroll();
 </script>
+
+</body>
+</html>
