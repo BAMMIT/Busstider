@@ -1,17 +1,225 @@
-/* BLOG spacing fix */
-.blog {
+:root {
+  --primary: 75 80% 45%;
+  --secondary: 195 85% 45%;
+  --background: 195 30% 98%;
+  --foreground: 195 50% 15%;
+  --border: 195 25% 88%;
+  --radius: 1rem;
+
+  --green: hsl(75,80%,45%);
+  --gradient-primary: linear-gradient(135deg, hsl(75,80%,45%), hsl(195,85%,45%));
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Outfit', sans-serif;
+  background: hsl(var(--background));
+  color: hsl(var(--foreground));
+  line-height: 1.7;
+}
+
+.container {
+  max-width: 1100px;
+  margin: auto;
+  padding: 2.5rem 1.5rem;
+}
+
+/* NAV */
+.navbar {
+  position: sticky;
+  top: 0;
+  background: white;
+  border-bottom: 1px solid hsl(var(--border));
+}
+
+.nav-content {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+nav {
+  display: flex;
+  gap: 2rem;
+}
+
+nav a {
+  text-decoration: none;
+  color: hsl(var(--foreground));
+}
+
+/* HERO */
+.hero {
+  text-align: center;
+  padding: 7rem 1rem;
+}
+
+.hero h1 {
+  font-size: 3rem;
+  margin-bottom: 1rem;
+}
+
+.hero p {
+  color: gray;
+  margin-bottom: 2rem;
+}
+
+.text-gradient {
+  background: var(--gradient-primary);
+  -webkit-background-clip: text;
+  color: transparent;
+}
+
+/* BUTTONS */
+.btn-primary {
+  background: var(--gradient-primary);
+  color: white;
+  border: none;
+  padding: 0.8rem 1.6rem;
+  border-radius: var(--radius);
+  cursor: pointer;
+}
+
+.btn-outline {
+  border: 1px solid hsl(var(--border));
+  padding: 0.8rem 1.6rem;
+  border-radius: var(--radius);
+  background: white;
+}
+
+/* SECTIONS */
+.about, .blog, .contact, .post {
   padding: 5rem 0;
   text-align: center;
 }
 
-.blog .card {
+.section-subtitle {
+  color: gray;
+  margin-bottom: 3rem;
+}
+
+/* CARDS */
+.card-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 2rem;
+}
+
+.card {
+  background: white;
+  border: 2px solid var(--green);
+  padding: 2rem;
+  border-radius: var(--radius);
   text-align: left;
+  transition: all 0.3s;
+}
+
+.card:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 12px 30px rgba(0,0,0,0.08);
+}
+
+.card h3 {
+  margin-bottom: 1rem;
+}
+
+.card ul {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+/* BLOG */
+.badge {
+  background: #eef;
+  padding: 0.3rem 0.7rem;
+  border-radius: 999px;
+  font-size: 0.8rem;
 }
 
 .blog a {
   display: inline-block;
   margin-top: 1rem;
   text-decoration: none;
-  color: hsl(var(--primary));
+  color: var(--green);
   font-weight: 500;
+}
+
+/* FORM */
+form {
+  max-width: 500px;
+  margin: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 1.2rem;
+}
+
+input, textarea {
+  padding: 0.9rem;
+  border-radius: var(--radius);
+  border: 1px solid hsl(var(--border));
+}
+
+/* MENU */
+.menu-toggle {
+  display: none;
+  font-size: 1.5rem;
+  background: none;
+  border: none;
+}
+
+/* ANIMATION */
+.reveal {
+  opacity: 0;
+  transform: translateY(50px);
+  transition: all 0.7s ease;
+}
+
+.reveal.active {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* RESPONSIVE */
+@media (max-width: 900px) {
+  .card-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+@media (max-width: 600px) {
+
+  .card-grid {
+    grid-template-columns: 1fr;
+  }
+
+  nav {
+    position: absolute;
+    top: 60px;
+    right: 0;
+    background: white;
+    flex-direction: column;
+    padding: 1rem;
+    display: none;
+    width: 200px;
+    border: 1px solid hsl(var(--border));
+  }
+
+  nav.active {
+    display: flex;
+  }
+
+  .menu-toggle {
+    display: block;
+  }
+
+  .hero h1 {
+    font-size: 2.2rem;
+  }
 }
