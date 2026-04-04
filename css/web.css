@@ -79,3 +79,94 @@ h1, h2, h3, h4, h5, h6 {
   border-radius: var(--radius);
   padding: 1.5rem;
 }
+
+/* Layout */
+.container {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 2rem;
+}
+
+/* Navbar */
+.navbar {
+  background: white;
+  border-bottom: 1px solid hsl(var(--border));
+}
+
+.nav-content {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+nav a {
+  margin-right: 1.5rem;
+  text-decoration: none;
+  color: hsl(var(--foreground));
+}
+
+/* Hero */
+.hero {
+  background: var(--gradient-hero);
+  text-align: center;
+  padding: 6rem 1rem;
+}
+
+.text-gradient {
+  background: var(--gradient-primary);
+  -webkit-background-clip: text;
+  color: transparent;
+}
+
+.hero-buttons {
+  margin-top: 1.5rem;
+}
+
+/* Outline button */
+.btn-outline {
+  border: 1px solid hsl(var(--border));
+  padding: 0.75rem 1.5rem;
+  border-radius: var(--radius);
+  background: white;
+  cursor: pointer;
+}
+
+/* Sections */
+.about, .blog {
+  text-align: center;
+  padding: 4rem 0;
+}
+
+.section-subtitle {
+  color: hsl(var(--muted-foreground));
+  margin-bottom: 2rem;
+}
+
+/* Cards layout */
+.card-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1.5rem;
+}
+
+/* Icon circle */
+.icon {
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  margin-bottom: 1rem;
+}
+
+/* Badge */
+.badge {
+  background: hsl(var(--accent));
+  color: hsl(var(--accent-foreground));
+  padding: 0.3rem 0.7rem;
+  border-radius: 999px;
+  font-size: 0.8rem;
+}
+
+/* Center */
+.center {
+  margin-top: 2rem;
+}
