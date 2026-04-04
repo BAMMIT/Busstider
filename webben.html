@@ -79,9 +79,26 @@
     <h2>Senaste inlägg</h2>
     <p class="section-subtitle">Håll dig uppdaterad med senaste informationen</p>
 
-    <div id="latest-posts" class="card-grid"></div>
-    <div class="center">
-      <a href="blog.html" class="btn-outline">Visa alla inlägg</a>
+    <div class="card-grid">
+      <div class="card reveal">
+        <h3>Prestanda i SQL Server</h3>
+        <p>Så optimerar du din SQL Server...</p>
+        <small>2026-04-01</small>
+      </div>
+      <div class="card reveal">
+        <h3>Index du måste ha</h3>
+        <p>De viktigaste indexen...</p>
+        <small>2026-03-25</small>
+      </div>
+      <div class="card reveal">
+        <h3>Backup strategi</h3>
+        <p>Så skyddar du din data...</p>
+        <small>2026-03-20</small>
+      </div>
+    </div>
+
+    <div class="center" style="margin-top:2rem;">
+      <a href="blog.html" class="btn-primary">Visa alla inlägg</a>
     </div>
   </div>
 </section>
@@ -137,24 +154,7 @@ const revealOnScroll = () => {
 };
 window.addEventListener("scroll", revealOnScroll);
 revealOnScroll();
-
-// BLOG (3 senaste)
-fetch('blog.json')
-  .then(res => res.json())
-  .then(data => {
-    data.sort((a,b) => new Date(b.date) - new Date(a.date));
-    const latest = data.slice(0,3);
-    const container = document.getElementById("latest-posts");
-    latest.forEach(post => {
-      container.innerHTML += `
-        <div class="card reveal">
-          <h3>${post.title}</h3>
-          <p>${post.excerpt}</p>
-          <small>${post.date}</small>
-        </div>
-      `;
-    });
-  });
 </script>
+
 </body>
 </html>
