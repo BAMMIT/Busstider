@@ -1,27 +1,49 @@
+/* ===================== */
+/*  FÄRGER & VARIABLER  */
+/* ===================== */
 :root {
   --primary: 75 80% 45%;
+  --secondary: 195 85% 45%;
   --blue-dark: 210 60% 20%;
   --background: 195 30% 98%;
-  --border: 195 25% 88%;
+  --foreground: 195 50% 15%;
+  --card: 0 0% 100%;
+  --border: 75 80% 45%;
   --radius: 1rem;
-
-  --green: hsl(75,80%,45%);
   --gradient-primary: linear-gradient(135deg, hsl(75,80%,45%), hsl(195,85%,45%));
 }
 
+/* ===================== */
+/*  GLOBALT / TYPOGRAFI  */
+/* ===================== */
 * {
   margin: 0;
   padding: 0;
   box-sizing: border-box;
 }
 
+html {
+  scroll-behavior: smooth;
+}
+
 body {
   font-family: 'Outfit', sans-serif;
   background: hsl(var(--background));
+  color: hsl(var(--foreground));
   line-height: 1.7;
 }
 
-/* NAVBAR */
+h1, h2, h3, h4, h5, h6 {
+  font-weight: 700;
+}
+
+a {
+  text-decoration: none;
+}
+
+/* ===================== */
+/*  NAVBAR  */
+/* ===================== */
 .navbar {
   position: sticky;
   top: 0;
@@ -35,6 +57,7 @@ body {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  padding: 1rem 2rem;
 }
 
 nav {
@@ -44,20 +67,23 @@ nav {
 
 nav a {
   color: white;
-  text-decoration: none;
+  font-weight: 500;
 }
 
-/* Layout */
-.container {
-  max-width: 1100px;
-  margin: auto;
-  padding: 2.5rem 1.5rem;
+.menu-toggle {
+  display: none;
+  font-size: 1.8rem;
+  background: none;
+  border: none;
+  color: white;
+  cursor: pointer;
 }
 
-/* HERO */
+/* ===================== */
+/*  HERO  */
 .hero {
   text-align: center;
-  padding: 7rem 1rem;
+  padding: 7rem 2rem;
 }
 
 .text-gradient {
@@ -66,53 +92,114 @@ nav a {
   color: transparent;
 }
 
-/* BUTTONS */
+.hero-buttons {
+  margin-top: 2rem;
+  display: flex;
+  justify-content: center;
+  gap: 1rem;
+}
+
+/* ===================== */
+/*  KNAPPAR  */
 .btn-primary {
   background: var(--gradient-primary);
   color: white;
-  border: none;
   padding: 0.8rem 1.6rem;
   border-radius: var(--radius);
+  border: none;
+  cursor: pointer;
+  font-weight: 500;
+  transition: 0.3s;
+}
+
+.btn-primary:hover {
+  opacity: 0.9;
+  transform: translateY(-2px);
 }
 
 .btn-outline {
-  border: 1px solid hsl(var(--border));
+  border: 2px solid hsl(var(--border));
   padding: 0.8rem 1.6rem;
   border-radius: var(--radius);
   background: white;
+  cursor: pointer;
+  font-weight: 500;
+  transition: 0.3s;
 }
 
-/* SECTIONS */
+.btn-outline:hover {
+  background: hsl(var(--border));
+  color: white;
+}
+
+/* ===================== */
+/*  SECTIONS  */
 .about, .blog, .contact, .post {
-  padding: 5rem 0;
+  padding: 5rem 2rem;
   text-align: center;
 }
 
 .section-subtitle {
-  margin-bottom: 3rem;
   color: gray;
+  margin-bottom: 3rem;
 }
 
-/* CARDS */
+/* ===================== */
+/*  CARDS  */
 .card-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 2rem;
+  margin-top: 2rem;
 }
 
 .card {
-  background: white;
-  border: 2px solid var(--green);
-  padding: 2rem;
+  background: hsl(var(--card));
+  border: 2px solid hsl(var(--border));
   border-radius: var(--radius);
+  padding: 2rem;
   text-align: left;
+  transition: transform 0.3s, box-shadow 0.3s;
 }
 
-/* FOOTER */
+.card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 10px 20px rgba(0,0,0,0.15);
+}
+
+.card ul {
+  list-style: none;
+  padding-left: 0;
+}
+
+.card ul li::before {
+  content: "✔ ";
+  color: hsl(var(--primary));
+}
+
+/* ===================== */
+/*  CONTACT FORM  */
+.contact form {
+  max-width: 600px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+input, textarea {
+  padding: 0.8rem;
+  border-radius: var(--radius);
+  border: 1px solid hsl(var(--border));
+  font-family: inherit;
+}
+
+/* ===================== */
+/*  FOOTER  */
 .footer {
   background: hsl(var(--blue-dark));
   color: white;
-  padding: 3rem 0;
+  padding: 3rem 2rem;
 }
 
 .footer-content {
@@ -121,16 +208,8 @@ nav a {
   gap: 2rem;
 }
 
-/* MENU */
-.menu-toggle {
-  display: none;
-  font-size: 1.5rem;
-  background: none;
-  border: none;
-  color: white;
-}
-
-/* ANIMATION */
+/* ===================== */
+/*  ANIMATIONER  */
 .reveal {
   opacity: 0;
   transform: translateY(50px);
@@ -142,7 +221,8 @@ nav a {
   transform: translateY(0);
 }
 
-/* RESPONSIVE */
+/* ===================== */
+/*  RESPONSIVE  */
 @media (max-width: 900px) {
   .card-grid, .footer-content {
     grid-template-columns: 1fr 1fr;
@@ -150,7 +230,6 @@ nav a {
 }
 
 @media (max-width: 600px) {
-
   .card-grid, .footer-content {
     grid-template-columns: 1fr;
   }
