@@ -1,0 +1,81 @@
+/* Lime Green & Ocean Blue Theme */
+:root {
+  /* Primary - Lime Green */
+  --primary: 75 80% 45%;
+  --primary-foreground: 0 0% 100%;
+  
+  /* Secondary - Ocean Blue */
+  --secondary: 195 85% 45%;
+  --secondary-foreground: 0 0% 100%;
+  
+  /* Backgrounds */
+  --background: 195 30% 98%;
+  --foreground: 195 50% 15%;
+  
+  /* Cards & Surfaces */
+  --card: 0 0% 100%;
+  --card-foreground: 195 50% 15%;
+  --muted: 195 20% 92%;
+  --muted-foreground: 195 30% 40%;
+  
+  /* Accents */
+  --accent: 75 70% 92%;
+  --accent-foreground: 75 80% 25%;
+  
+  /* Borders */
+  --border: 195 25% 88%;
+  --ring: 75 80% 45%;
+  
+  /* Gradients */
+  --gradient-primary: linear-gradient(135deg, hsl(75, 80%, 45%), hsl(195, 85%, 45%));
+  --gradient-hero: linear-gradient(180deg, hsl(195, 30%, 98%) 0%, hsl(195, 40%, 94%) 100%);
+  
+  --radius: 0.75rem;
+}
+
+/* Typography - Add Google Font in HTML: */
+/* <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet"> */
+
+body {
+  font-family: 'Outfit', sans-serif;
+  background-color: hsl(var(--background));
+  color: hsl(var(--foreground));
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: 'Outfit', sans-serif;
+  font-weight: 700;
+}
+
+/* Utility Classes */
+.bg-primary { background-color: hsl(var(--primary)); }
+.bg-secondary { background-color: hsl(var(--secondary)); }
+.bg-gradient { background: var(--gradient-primary); }
+.text-primary { color: hsl(var(--primary)); }
+.text-secondary { color: hsl(var(--secondary)); }
+.border-primary { border-color: hsl(var(--primary)); }
+
+/* Button Styles */
+.btn-primary {
+  background: var(--gradient-primary);
+  color: white;
+  padding: 0.75rem 1.5rem;
+  border-radius: var(--radius);
+  font-weight: 500;
+  border: none;
+  cursor: pointer;
+  transition: opacity 0.2s, transform 0.2s;
+}
+
+.btn-primary:hover {
+  opacity: 0.9;
+  transform: translateY(-2px);
+}
+
+/* Card Style */
+.card {
+  background: hsl(var(--card));
+  border: 1px solid hsl(var(--border));
+  border-radius: var(--radius);
+  padding: 1.5rem;
+}
