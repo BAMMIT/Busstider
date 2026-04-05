@@ -36,7 +36,8 @@ nav a { color:white; font-weight:500;}
 
 /* ===================== */
 /*  KNAPPAR  */
-.btn-primary { background: var(--gradient-primary); color:white; padding:0.8rem 1.6rem; border-radius:var(--radius); border:none; cursor:pointer; font-weight:500; transition:0.3s; }
+button, a { font-family: 'Outfit', sans-serif;}
+.btn-primary { background: var(--gradient-primary); color: white; padding: 0.8rem 1.6rem; border-radius: var(--radius); border: none; cursor: pointer; font-weight: 500; transition: 0.3s; font-family: 'Outfit', sans-serif; font-size: 1rem; display: inline-block; text-align: center; }
 .btn-primary:hover { opacity:0.9; transform:translateY(-2px);}
 .btn-outline { border:2px solid hsl(var(--border)); padding:0.8rem 1.6rem; border-radius:var(--radius); background:white; cursor:pointer; font-weight:500; transition:0.3s;}
 .btn-outline:hover { background:hsl(var(--border)); color:white;}
