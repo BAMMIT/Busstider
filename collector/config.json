@@ -1,0 +1,7 @@
+{
+  "busOnly": true,
+  "quietHours": [1, 4],
+  "stops": [
+    { "id": "740022197", "name": "Karlstad Residenstorget" }
+  ]
+}
