@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Busstider</title>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/maplibre-gl@5.24.0/dist/maplibre-gl.css">
 <style>
 :root{--bg:#f4f6f3;--surf:#fff;--ink:#14231f;--mute:#5b6b66;--line:#d5ddd8;--acc:#0f6b5c;--acc-ink:#fff;--ok:#2e7d4f;--late:#c77700;--early:#2b6cb0;--bad:#b3261e}
 @media (prefers-color-scheme:dark){:root:not([data-theme=light]){--bg:#0f1a17;--surf:#17251f;--ink:#e6efeb;--mute:#93a49d;--line:#2b3d36;--acc:#4fc3a8;--acc-ink:#06201a;--ok:#5fcf8b;--late:#f0a63a;--early:#6cb2f2;--bad:#ff8a80}}
@@ -46,6 +47,7 @@ th{font-size:.85rem;color:var(--mute);font-weight:600}
 .legend span{display:inline-block;width:.8em;height:.8em;border-radius:2px;margin:0 4px 0 12px}
 .msg{padding:8px 12px;border-radius:6px;background:var(--bg);border:1px solid var(--line);margin:8px 0}
 footer{max-width:980px;margin:0 auto;padding:0 16px 24px}
+h2.bt{font-size:1.05rem;margin:18px 0 6px}
 [hidden]{display:none!important}
 @media print{header,.tabs,details,#stopbar,footer,.noprint{display:none!important}body{background:#fff}.view{display:none!important}#v-map{display:block!important}#map{height:85vh}}
 </style>
@@ -82,12 +84,16 @@ footer{max-width:980px;margin:0 auto;padding:0 16px 24px}
 
 <section class="view" id="v-board">
 <div class="row noprint" style="margin-bottom:10px">
-<select id="type" aria-label="Typ"><option value="departures">Avgångar</option><option value="arrivals">Ankomster</option></select>
 <label class="row" style="margin:0"><input type="checkbox" id="bus" checked> Endast buss</label>
 <button id="refresh">Uppdatera nu</button>
 <span class="muted" id="upd"></span>
 </div>
-<div class="scroll"><table><thead><tr><th>Linje</th><th id="thdir">Mot</th><th>Plan</th><th>Beräknad</th><th>Avvikelse</th><th>Plats</th></tr></thead><tbody id="rows"></tbody></table></div>
+<div id="boards">
+<h2 class="bt">Ankomster</h2>
+<div class="scroll"><table><thead><tr><th>Linje</th><th>Från</th><th>Plan</th><th>Beräknad</th><th>Avvikelse</th><th>Plats</th></tr></thead><tbody id="rows-a"></tbody></table></div>
+<h2 class="bt">Avgångar</h2>
+<div class="scroll"><table><thead><tr><th>Linje</th><th>Mot</th><th>Plan</th><th>Beräknad</th><th>Avvikelse</th><th>Plats</th></tr></thead><tbody id="rows-d"></tbody></table></div>
+</div>
 <p class="muted" id="empty" hidden>Välj en hållplats ovan för att se tider.</p>
 </section>
 
@@ -116,7 +122,7 @@ footer{max-width:980px;margin:0 auto;padding:0 16px 24px}
 <section class="view" id="v-map" hidden>
 <div class="row noprint" style="margin-bottom:10px">
 <select id="mline" aria-label="Linje"><option value="">Alla linjer</option></select>
-<select id="mstyle" aria-label="Kartstil"><option value="simple">Enkel karta</option><option value="minimal">Utan etiketter</option><option value="detailed">Detaljerad karta</option></select>
+<select id="mstyle" aria-label="Kartstil"><option value="simple">Enkel karta</option><option value="detailed">Detaljerad karta</option></select>
 <label class="row" style="margin:0"><input type="checkbox" id="onlyboard" checked> Bara bussar som syns på tavlan</label>
 <label class="row" style="margin:0"><input type="checkbox" id="auto" checked> Uppdatera var 30:e sekund</label>
 <button id="mrefresh">Hämta positioner</button>
@@ -127,9 +133,11 @@ footer{max-width:980px;margin:0 auto;padding:0 16px 24px}
 <div id="map" role="img" aria-label="Karta med bussarnas positioner"></div>
 </section>
 </main>
-<footer class="muted">Data från Trafiklab.se, licens CC BY 4.0. Kartdata © OpenStreetMap-bidragsgivare, kartstil © CARTO.</footer>
+<footer class="muted">Data från Trafiklab.se, licens CC BY 4.0. Kartdata © OpenStreetMap-bidragsgivare, kartstil OpenFreeMap © OpenMapTiles.</footer>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/maplibre-gl@5.24.0/dist/maplibre-gl.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@maplibre/maplibre-gl-leaflet@0.1.4/leaflet-maplibre-gl.js"></script>
 <script>
 const $=s=>document.querySelector(s);
 const API='https://realtime-api.trafiklab.se/v1';
@@ -189,17 +197,20 @@ function fmtDelay(s,rt,c){
   if(m<=-1)return`<span class="early">${m} min</span>`;
   return'<span class="ok">I tid</span>'
 }
-function renderBoard(){
-  const t=$('#type').value,c=cache[cur];
-  $('#empty').hidden=!!c;$('#thdir').textContent=t==='arrivals'?'Från':'Mot';
-  if(!c){$('#rows').innerHTML='';$('#upd').textContent='';return}
-  const list=(t==='arrivals'?c.arr.arrivals:c.dep.departures)||[];
+function boardRows(list,arrivals){
   const items=list.filter(x=>!$('#bus').checked||x.route.transport_mode==='BUS');
-  $('#upd').textContent='Hämtad '+c.ts.toLocaleTimeString('sv-SE');
-  $('#rows').innerHTML=items.map(x=>{
-    const place=t==='arrivals'?(x.route.origin?.name||x.route.direction):(x.route.direction||x.route.destination?.name);
+  return items.map(x=>{
+    const place=arrivals?(x.route.origin?.name||x.route.direction):(x.route.direction||x.route.destination?.name);
     const pf=x.realtime_platform?.designation||x.scheduled_platform?.designation||'';
     return`<tr class="${x.canceled?'cancel':''}"><td><span class="line">${esc(x.route.designation||x.route.name)}</span></td><td>${esc(place)}</td><td>${hhmm(x.scheduled)}</td><td>${hhmm(x.realtime)}</td><td>${fmtDelay(x.delay,x.is_realtime,x.canceled)}</td><td>${esc(pf)}</td></tr>`}).join('')||'<tr><td colspan="6" class="muted">Inga turer de närmaste 60 minuterna.</td></tr>';
+}
+function renderBoard(){
+  const c=cache[cur];
+  $('#empty').hidden=!!c;$('#boards').hidden=!c;
+  if(!c){$('#upd').textContent='';return}
+  $('#upd').textContent='Hämtad '+c.ts.toLocaleTimeString('sv-SE');
+  $('#rows-a').innerHTML=boardRows(c.arr.arrivals||[],true);
+  $('#rows-d').innerHTML=boardRows(c.dep.departures||[],false);
 }
 
 /* ---------- statistik ---------- */
@@ -267,21 +278,20 @@ function parseVehicles(buf){
         else if(x.f===8)for(const y of fields(b,x.s,x.e)){if(y.f===2)veh.label=td.decode(b.subarray(y.s,y.e))}}
       if(veh.lat!=null&&veh.lon!=null)out.push(veh)}}
   return out}
-const TILES={
-  simple:'https://{s}.basemaps.cartocdn.com/{v}_all/{z}/{x}/{y}{r}.png',
-  minimal:'https://{s}.basemaps.cartocdn.com/{v}_nolabels/{z}/{x}/{y}{r}.png',
-  detailed:'https://tile.openstreetmap.org/{z}/{x}/{y}.png'};
-const ATTR={simple:'© OpenStreetMap-bidragsgivare © CARTO',minimal:'© OpenStreetMap-bidragsgivare © CARTO',detailed:'© OpenStreetMap'};
-const isDark=()=>matchMedia('(prefers-color-scheme: dark)').matches;
-function setBase(style,forceLight){
+const OSM_ATTR='© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>';
+const OFM_ATTR='<a href="https://openfreemap.org">OpenFreeMap</a> © <a href="https://www.openmaptiles.org/">OpenMapTiles</a> Data från '+OSM_ATTR;
+function setBase(style){
   if(baseLayer)map.removeLayer(baseLayer);
-  baseLayer=L.tileLayer(TILES[style],{subdomains:'abcd',v:(isDark()&&!forceLight)?'dark':'light',maxZoom:19,attribution:ATTR[style]}).addTo(map);
-  baseLayer.bringToBack();
+  if(style==='simple'&&window.maplibregl&&L.maplibreGL){
+    baseLayer=L.maplibreGL({style:'https://tiles.openfreemap.org/styles/positron',preserveDrawingBuffer:true,attribution:OFM_ATTR}).addTo(map);
+  }else{
+    baseLayer=L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19,attribution:OSM_ATTR}).addTo(map);
+  }
 }
 function initMap(){
   if(mapReady)return;mapReady=true;
   map=L.map('map').setView([59.38,13.5],12);
-  const st=LS.get('bt_mstyle','simple');$('#mstyle').value=TILES[st]?st:'simple';setBase($('#mstyle').value);
+  const st=LS.get('bt_mstyle','simple');$('#mstyle').value=['simple','detailed'].includes(st)?st:'simple';setBase($('#mstyle').value);
   lineLayer=L.layerGroup().addTo(map);stopLayer=L.layerGroup().addTo(map);busLayer=L.layerGroup().addTo(map);
   fillLines();drawStops();
 }
@@ -345,12 +355,7 @@ async function drawMap(){
 $('#mrefresh').onclick=drawMap;$('#onlyboard').onchange=drawMap;
 $('#mline').onchange=()=>{drawLine(true);drawMap()};
 $('#mstyle').onchange=e=>{LS.set('bt_mstyle',e.target.value);setBase(e.target.value)};
-$('#print').onclick=()=>{
-  setBase($('#mstyle').value,true);map.invalidateSize();
-  let done=false;const go=()=>{if(!done){done=true;window.print()}};
-  baseLayer.once('load',()=>setTimeout(go,200));setTimeout(go,2500);
-};
-window.addEventListener('afterprint',()=>{if(mapReady)setBase($('#mstyle').value)});
+$('#print').onclick=()=>{map.invalidateSize();setTimeout(()=>window.print(),1000)};
 
 /* ---------- flikar och start ---------- */
 document.querySelectorAll('.tabs button').forEach(b=>b.onclick=()=>{
@@ -359,7 +364,7 @@ document.querySelectorAll('.tabs button').forEach(b=>b.onclick=()=>{
   clearInterval(mtimer);
   if(b.dataset.v==='map'){initMap();setTimeout(()=>{map.invalidateSize();fillLines();drawLine(true);drawMap()},50);mtimer=setInterval(()=>{if($('#auto').checked)drawMap()},30000)}
   if(b.dataset.v==='stats')loadStats()});
-['type','bus'].forEach(id=>$('#'+id).addEventListener('change',()=>{renderBoard();renderStats()}));
+$('#bus').addEventListener('change',()=>{renderBoard();renderStats()});
 $('#refresh').onclick=refreshAll;
 loadCfg();renderChips();renderBoard();renderStats();
 if(!cfg.key)$('#settings').open=true;
