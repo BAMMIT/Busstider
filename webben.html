@@ -1,161 +1,298 @@
 <!DOCTYPE html>
 <html lang="sv">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Bammit</title>
-
-  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="css/webben.css" />
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Busstider</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.css">
+<style>
+:root{--bg:#f4f6f3;--surf:#fff;--ink:#14231f;--mute:#5b6b66;--line:#d5ddd8;--acc:#0f6b5c;--acc-ink:#fff;--ok:#2e7d4f;--late:#c77700;--early:#2b6cb0;--bad:#b3261e}
+@media (prefers-color-scheme:dark){:root:not([data-theme=light]){--bg:#0f1a17;--surf:#17251f;--ink:#e6efeb;--mute:#93a49d;--line:#2b3d36;--acc:#4fc3a8;--acc-ink:#06201a;--ok:#5fcf8b;--late:#f0a63a;--early:#6cb2f2;--bad:#ff8a80}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.45 system-ui,-apple-system,"Segoe UI",sans-serif}
+header{background:var(--acc);color:var(--acc-ink);padding:14px 20px;display:flex;align-items:baseline;gap:14px;flex-wrap:wrap}
+header h1{margin:0;font-size:1.35rem;letter-spacing:.2px}
+header span{opacity:.85;font-size:.9rem}
+main{max-width:980px;margin:0 auto;padding:16px}
+details,.panel{background:var(--surf);border:1px solid var(--line);border-radius:8px;padding:12px 14px;margin-bottom:14px}
+summary{cursor:pointer;font-weight:600}
+label{display:block;font-size:.85rem;color:var(--mute);margin:10px 0 3px}
+input,select,button{font:inherit;color:var(--ink);background:var(--surf);border:1px solid var(--line);border-radius:6px;padding:7px 10px}
+input[type=text],input[type=password],input[type=search]{width:100%}
+button{cursor:pointer}
+button.pri{background:var(--acc);color:var(--acc-ink);border-color:var(--acc);font-weight:600}
+button:focus-visible,input:focus-visible,select:focus-visible,summary:focus-visible{outline:3px solid var(--late);outline-offset:1px}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.chips{display:flex;gap:6px;flex-wrap:wrap;margin:10px 0 0}
+.chip{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line);border-radius:999px;padding:3px 4px 3px 12px;background:var(--bg)}
+.chip.sel{background:var(--acc);color:var(--acc-ink);border-color:var(--acc)}
+.chip button{border:0;background:transparent;color:inherit;padding:0 8px;font-size:1.1rem;line-height:1}
+.tabs{display:flex;gap:2px;border-bottom:2px solid var(--line);margin-bottom:14px}
+.tabs button{border:0;border-bottom:3px solid transparent;border-radius:0;background:transparent;padding:9px 16px;margin-bottom:-2px;color:var(--mute);font-weight:600}
+.tabs button[aria-selected=true]{color:var(--ink);border-bottom-color:var(--acc)}
+table{width:100%;border-collapse:collapse;font-variant-numeric:tabular-nums}
+th,td{text-align:left;padding:8px 6px;border-bottom:1px solid var(--line)}
+th{font-size:.85rem;color:var(--mute);font-weight:600}
+.scroll{overflow-x:auto}
+.line{display:inline-block;min-width:2.4em;text-align:center;font-weight:700;background:var(--ink);color:var(--surf);border-radius:4px;padding:1px 6px}
+.ok{color:var(--ok)}.late{color:var(--late)}.early{color:var(--early)}.bad{color:var(--bad)}
+.cancel td{opacity:.6;text-decoration:line-through}
+.muted{color:var(--mute);font-size:.88rem}
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-bottom:14px}
+.card{border:1px solid var(--line);border-radius:8px;padding:10px 12px;background:var(--surf)}
+.card b{display:block;font-size:1.6rem;font-variant-numeric:tabular-nums}
+#map{height:60vh;min-height:360px;border-radius:8px;border:1px solid var(--line)}
+.bus{background:var(--acc);color:var(--acc-ink);font-weight:700;font-size:12px;border-radius:12px;padding:2px 6px;border:2px solid var(--surf);text-align:center;white-space:nowrap}
+.legend span{display:inline-block;width:.8em;height:.8em;border-radius:2px;margin:0 4px 0 12px}
+.msg{padding:8px 12px;border-radius:6px;background:var(--bg);border:1px solid var(--line);margin:8px 0}
+footer{max-width:980px;margin:0 auto;padding:0 16px 24px}
+[hidden]{display:none!important}
+@media print{header,.tabs,details,#stopbar,footer,.noprint{display:none!important}body{background:#fff}.view{display:none!important}#v-map{display:block!important}#map{height:85vh}}
+</style>
 </head>
-
 <body>
+<header><h1>Busstider</h1><span id="status">Ange API-nyckel under Inställningar för att börja</span></header>
+<main>
+<details id="settings">
+<summary>Inställningar</summary>
+<label for="k1">Trafiklab Realtime API-nyckel (tavla och statistik)</label>
+<input id="k1" type="password" autocomplete="off">
+<label for="k2">Trafiklab GTFS Sweden 3 Realtime-nyckel (bussar på kartan)</label>
+<input id="k2" type="password" autocomplete="off">
+<label for="op">Operatörskod för GTFS-RT</label>
+<input id="op" type="text" placeholder="varm">
+<label for="px">Proxy-prefix för kartdata (valfritt, används om webbläsaren blockerar anropet)</label>
+<input id="px" type="text" placeholder="https://din-worker.example.workers.dev/?url=">
+<div class="row" style="margin-top:12px"><button class="pri" id="save">Spara</button><span class="muted">Nycklarna sparas bara i den här webbläsaren.</span></div>
+</details>
 
-<header class="navbar">
-  <div class="container nav-content">
-    <div class="logo">BAMMIT</div>
-    <nav id="nav-menu">
-      <a href="#home">Hem</a>
-      <a href="#about">Paket</a>
-      <a href="blog.html">Blogg</a>
-      <a href="#contact">Contact</a>
-    </nav>
-    <button id="menu-toggle" class="menu-toggle">☰</button>
-  </div>
-</header>
+<div class="panel" id="stopbar">
+<form id="sform" class="row"><input id="q" type="search" placeholder="Sök hållplats, till exempel Karlstad Resecentrum" aria-label="Sök hållplats" style="flex:1;min-width:220px"><button class="pri">Sök</button></form>
+<div id="results"></div>
+<div class="chips" id="chips" aria-label="Valda hållplatser"></div>
+</div>
 
-<!-- HERO -->
-<section id="home" class="hero reveal">
-  <div class="container">
-    <h1>Välkommen till <span class="text-gradient">Bekvämligheten</span></h1>
-    <p>Vi hjälper dig med att förenkla din vardag</p>
-<!--    <div class="hero-buttons">
-      <button class="btn-primary">Kom igång →</button>
-      <button class="btn-outline">Mer Information</button>
-    </div>
--->    
-  </div>
+<div class="tabs" role="tablist">
+<button role="tab" aria-selected="true" data-v="board">Tavla</button>
+<button role="tab" aria-selected="false" data-v="stats">Punktlighet</button>
+<button role="tab" aria-selected="false" data-v="map">Karta</button>
+</div>
+
+<section class="view" id="v-board">
+<div class="row noprint" style="margin-bottom:10px">
+<select id="type" aria-label="Typ"><option value="departures">Avgångar</option><option value="arrivals">Ankomster</option></select>
+<label class="row" style="margin:0"><input type="checkbox" id="bus" checked> Endast buss</label>
+<button id="refresh">Uppdatera nu</button>
+<span class="muted" id="upd"></span>
+</div>
+<div class="scroll"><table><thead><tr><th>Linje</th><th id="thdir">Mot</th><th>Plan</th><th>Beräknad</th><th>Avvikelse</th><th>Plats</th></tr></thead><tbody id="rows"></tbody></table></div>
+<p class="muted" id="empty" hidden>Välj en hållplats ovan för att se tider.</p>
 </section>
 
-<!-- PAKET -->
-<section id="about" class="about reveal">
-  <div class="container">
-    <h2>Våra Paket</h2>
-    <p class="section-subtitle">SQL Server - Lite enklare - Lite bekvämare</p>
-
-    <div class="card-grid">
-      <div class="card reveal">
-        <h3>Bas</h3>
-        <ul>
-          <li>Rådgivning via mail</li>
-          <li>Tillgång till dokumentbibliotek</li>
-          <li>Löpande information om uppdateringar</li>
-        </ul>
-      </div>
-
-      <div class="card reveal">
-        <h3>Plus</h3>
-        <ul>
-          <li>Allt i Bas</li>
-          <li>Rådgivning via telefon</li>
-          <li>Utökat dokumentbibliotek</li>
-          <li>Prioriterad tillgänglighet</li>
-        </ul>
-      </div>
-
-      <div class="card reveal">
-        <h3>Timbank</h3>
-        <ul>
-          <li>Allt i Plus</li>
-          <li>Rabatterat timpris</li>
-        </ul>
-      </div>
-    </div>
-  </div>
+<section class="view" id="v-stats" hidden>
+<div class="row noprint" style="margin-bottom:12px">
+<select id="sstop" aria-label="Hållplats"></select>
+<select id="stype" aria-label="Typ"><option value="d">Avgångar</option><option value="a">Ankomster</option></select>
+<label class="row" style="margin:0">Sen efter <input id="late" type="number" value="3" min="0" style="width:4.5em"> min</label>
+<label class="row" style="margin:0">Tidig före <input id="early" type="number" value="1" min="0" style="width:4.5em"> min</label>
+<button id="export">Exportera JSON</button>
+<button id="clear">Rensa statistik</button>
+</div>
+<div class="cards" id="cards"></div>
+<div class="panel">
+<strong>Punktlighet per timme</strong>
+<p class="legend muted" style="margin:4px 0 8px"><span style="background:var(--early)"></span>Tidig<span style="background:var(--ok)"></span>I tid<span style="background:var(--late)"></span>Sen</p>
+<div id="chart"></div>
+</div>
+<div class="panel scroll"><strong>Per linje</strong>
+<table><thead><tr><th>Linje</th><th>Turer</th><th>I tid</th><th>Snitt avvikelse</th><th>Inställda</th></tr></thead><tbody id="lrows"></tbody></table></div>
+<p class="muted">Statistiken samlas in medan sidan är öppen: sidan hämtar tavlan för alla valda hållplatser en gång i minuten och sparar sista kända avvikelse för varje tur. Bara turer med realtidsdata räknas.</p>
 </section>
 
-<!-- BLOGG  -->
-<section id="blog" class="blog reveal">
-  <div class="container">
-    <h2>Senaste inlägg</h2>
-    <p class="section-subtitle">Håll dig uppdaterad med senaste informationen</p>
-
-    <div class="card-grid">
-      <div class="card reveal">
-        <h3>Prestanda i SQL Server</h3>
-        <p>Så optimerar du din SQL Server...</p>
-        <small>2026-04-01</small>
-      </div>
-      <div class="card reveal">
-        <h3>Index du måste ha</h3>
-        <p>De viktigaste indexen...</p>
-        <small>2026-03-25</small>
-      </div>
-      <div class="card reveal">
-        <h3>Backup strategi</h3>
-        <p>Så skyddar du din data...</p>
-        <small>2026-03-20</small>
-      </div>
-    </div>
-
-    <div class="center" style="margin-top:2rem;">
-      <a href="blog.html" class="btn-primary">Fler inlägg</a>
-    </div>
-  </div>
+<section class="view" id="v-map" hidden>
+<div class="row noprint" style="margin-bottom:10px">
+<label class="row" style="margin:0"><input type="checkbox" id="onlyboard" checked> Bara bussar som syns på tavlan</label>
+<label class="row" style="margin:0"><input type="checkbox" id="auto" checked> Uppdatera var 30:e sekund</label>
+<button id="mrefresh">Hämta positioner</button>
+<button class="pri" id="print">Skriv ut kartan</button>
+<span class="muted" id="mstat"></span>
+</div>
+<div id="map" role="img" aria-label="Karta med bussarnas positioner"></div>
 </section>
+</main>
+<footer class="muted">Data från Trafiklab.se, licens CC BY 4.0. Kartdata © OpenStreetMap.</footer>
 
-<!-- CONTACT -->
-<section id="contact" class="contact reveal">
-  <div class="container">
-    <h2>Contact</h2>
-    <p class="section-subtitle">Vi vill höra från dig</p>
-
-    <form action="https://formsubmit.co/joakim.bang@outlook.com" method="POST">
-      <input type="text" name="name" placeholder="Ditt namn" required>
-      <input type="email" name="email" placeholder="Din email" required>
-      <textarea name="message" rows="5" placeholder="Ditt meddelande" required></textarea>
-      <button type="submit" class="btn-primary">Skicka</button>
-    </form>
-  </div>
-</section>
-
-<!-- FOOTER -->
-<footer class="footer">
-  <div class="container footer-content">
-    <div>
-      <h3>BAMMIT</h3>
-      <p>SQL Server - Lite enklare - Lite bekvämare</p>
-    </div>
-
-    <div>
-      <p>📧 info@bammit.se</p>
-      <p>📞 070-123 45 67</p>
-      <p>📍 Sverige</p>
-    </div>
-
-    <div>
-      <p>© 2026 BAMMIT</p>
-    </div>
-  </div>
-</footer>
-
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.js"></script>
 <script>
-// MENU TOGGLE
-const toggle = document.getElementById("menu-toggle");
-const nav = document.getElementById("nav-menu");
-toggle.addEventListener("click", () => nav.classList.toggle("active"));
+const $=s=>document.querySelector(s);
+const API='https://realtime-api.trafiklab.se/v1';
+const LS={get(k,d){try{const v=localStorage.getItem(k);return v?JSON.parse(v):d}catch(e){return d}},set(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){console.warn(e)}}};
+let cfg=Object.assign({key:'',gkey:'',op:'varm',proxy:''},LS.get('bt_cfg',{}));
+let stops=LS.get('bt_stops',[]);
+let stats=LS.get('bt_stats',{});
+let cache={},cur=null,mapReady=false,map,stopLayer,busLayer,mtimer;
+const esc=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const hhmm=iso=>iso?iso.slice(11,16):'';
+const setStatus=t=>{$('#status').textContent=t};
 
-// REVEAL ANIMATION
-const reveals = document.querySelectorAll(".reveal");
-const revealOnScroll = () => {
-  reveals.forEach(el => {
-    const top = el.getBoundingClientRect().top;
-    if(top < window.innerHeight - 80) el.classList.add("active");
-  });
+/* ---------- inställningar ---------- */
+function loadCfg(){$('#k1').value=cfg.key;$('#k2').value=cfg.gkey;$('#op').value=cfg.op;$('#px').value=cfg.proxy}
+$('#save').onclick=()=>{cfg={key:$('#k1').value.trim(),gkey:$('#k2').value.trim(),op:$('#op').value.trim()||'varm',proxy:$('#px').value.trim()};LS.set('bt_cfg',cfg);setStatus('Inställningar sparade');refreshAll()};
+async function getJSON(url){const r=await fetch(url);if(!r.ok)throw new Error('HTTP '+r.status);return r.json()}
+
+/* ---------- hållplatser ---------- */
+$('#sform').onsubmit=async e=>{
+  e.preventDefault();const q=$('#q').value.trim();if(!q)return;
+  if(!cfg.key){$('#settings').open=true;setStatus('Lägg in API-nyckel först');return}
+  $('#results').innerHTML='<div class="msg">Söker…</div>';
+  try{
+    const d=await getJSON(`${API}/stops/name/${encodeURIComponent(q)}?key=${cfg.key}`);
+    const g=(d.stop_groups||[]).slice(0,8);
+    $('#results').innerHTML=g.length?g.map(s=>`<div class="row msg"><span style="flex:1">${esc(s.name)} <span class="muted">${esc((s.transport_modes||[]).join(', '))}</span></span><button data-id="${esc(s.id)}" data-name="${esc(s.name)}">Lägg till</button></div>`).join(''):'<div class="msg">Inga träffar. Prova en kortare sökning.</div>';
+    $('#results').querySelectorAll('button').forEach(b=>b.onclick=()=>{addStop(b.dataset.id,b.dataset.name);$('#results').innerHTML=''})
+  }catch(err){$('#results').innerHTML=`<div class="msg bad">Sökningen misslyckades (${esc(err.message)}). Kontrollera nyckeln.</div>`}
 };
-window.addEventListener("scroll", revealOnScroll);
-revealOnScroll();
-</script>
+function addStop(id,name){if(!stops.find(s=>s.id===id))stops.push({id,name});LS.set('bt_stops',stops);cur=id;renderChips();refreshAll()}
+function removeStop(id){stops=stops.filter(s=>s.id!==id);LS.set('bt_stops',stops);if(cur===id)cur=stops[0]?.id||null;renderChips();renderBoard();renderStats();drawMap()}
+function renderChips(){
+  if(!cur&&stops[0])cur=stops[0].id;
+  $('#chips').innerHTML=stops.map(s=>`<span class="chip ${s.id===cur?'sel':''}"><span data-sel="${esc(s.id)}" style="cursor:pointer">${esc(s.name)}</span><button data-rm="${esc(s.id)}" aria-label="Ta bort ${esc(s.name)}">×</button></span>`).join('');
+  $('#chips').querySelectorAll('[data-sel]').forEach(e=>e.onclick=()=>{cur=e.dataset.sel;renderChips();renderBoard()});
+  $('#chips').querySelectorAll('[data-rm]').forEach(e=>e.onclick=()=>removeStop(e.dataset.rm));
+  $('#sstop').innerHTML='<option value="all">Alla hållplatser</option>'+stops.map(s=>`<option value="${esc(s.id)}">${esc(s.name)}</option>`).join('');
+}
 
+/* ---------- hämta och tavla ---------- */
+async function fetchStop(s){
+  const [dep,arr]=await Promise.all([getJSON(`${API}/departures/${s.id}?key=${cfg.key}`),getJSON(`${API}/arrivals/${s.id}?key=${cfg.key}`)]);
+  cache[s.id]={dep,arr,ts:new Date()};record(s.id,dep.departures||[],'d');record(s.id,arr.arrivals||[],'a');
+}
+async function refreshAll(){
+  if(!cfg.key||!stops.length){renderBoard();return}
+  setStatus('Hämtar…');
+  const res=await Promise.allSettled(stops.map(fetchStop));
+  const fail=res.filter(r=>r.status==='rejected');
+  setStatus(fail.length?`Fel vid hämtning: ${fail[0].reason.message}`:'Uppdaterad '+new Date().toLocaleTimeString('sv-SE',{hour:'2-digit',minute:'2-digit'}));
+  prune();LS.set('bt_stats',stats);renderBoard();renderStats();if(mapReady)drawStops();
+}
+function fmtDelay(s,rt,c){
+  if(c)return'<span class="bad">Inställd</span>';
+  if(!rt)return'<span class="muted">Ingen realtid</span>';
+  const m=Math.round(s/60);
+  if(m>=3)return`<span class="late">+${m} min</span>`;
+  if(m<=-1)return`<span class="early">${m} min</span>`;
+  return'<span class="ok">I tid</span>'
+}
+function renderBoard(){
+  const t=$('#type').value,c=cache[cur];
+  $('#empty').hidden=!!c;$('#thdir').textContent=t==='arrivals'?'Från':'Mot';
+  if(!c){$('#rows').innerHTML='';$('#upd').textContent='';return}
+  const list=(t==='arrivals'?c.arr.arrivals:c.dep.departures)||[];
+  const items=list.filter(x=>!$('#bus').checked||x.route.transport_mode==='BUS');
+  $('#upd').textContent='Hämtad '+c.ts.toLocaleTimeString('sv-SE');
+  $('#rows').innerHTML=items.map(x=>{
+    const place=t==='arrivals'?(x.route.origin?.name||x.route.direction):(x.route.direction||x.route.destination?.name);
+    const pf=x.realtime_platform?.designation||x.scheduled_platform?.designation||'';
+    return`<tr class="${x.canceled?'cancel':''}"><td><span class="line">${esc(x.route.designation||x.route.name)}</span></td><td>${esc(place)}</td><td>${hhmm(x.scheduled)}</td><td>${hhmm(x.realtime)}</td><td>${fmtDelay(x.delay,x.is_realtime,x.canceled)}</td><td>${esc(pf)}</td></tr>`}).join('')||'<tr><td colspan="6" class="muted">Inga turer de närmaste 60 minuterna.</td></tr>';
+}
+
+/* ---------- statistik ---------- */
+function record(stopId,list,kind){
+  for(const x of list){
+    if(!x.is_realtime&&!x.canceled)continue;
+    const k=[kind,x.trip.trip_id,x.trip.start_date,x.stop.id].join('|');
+    stats[k]={k:kind,l:x.route.designation||x.route.name||'?',s:x.stop.name,a:stopId,sc:x.scheduled,dl:x.delay,c:x.canceled?1:0,m:x.route.transport_mode}
+  }
+}
+function prune(){const lim=Date.now()-30*864e5;for(const k in stats)if(new Date(stats[k].sc).getTime()<lim)delete stats[k]}
+function bar(w,h,rows){
+  const bw=w/24,mx=Math.max(1,...rows.map(r=>r.e+r.o+r.l));let out=`<svg viewBox="0 0 ${w} ${h+22}" width="100%" role="img" aria-label="Stapeldiagram över punktlighet per timme">`;
+  rows.forEach((r,i)=>{const tot=r.e+r.o+r.l;let y=h;const x=i*bw+2;
+    [['--early',r.e],['--ok',r.o],['--late',r.l]].forEach(([c,n])=>{const hh=n/mx*h;y-=hh;if(n)out+=`<rect x="${x}" y="${y}" width="${bw-4}" height="${hh}" fill="var(${c})"><title>${i}:00, ${n} turer</title></rect>`});
+    if(i%3===0)out+=`<text x="${x}" y="${h+15}" font-size="11" fill="var(--mute)">${String(i).padStart(2,'0')}</text>`});
+  return out+`<line x1="0" y1="${h}" x2="${w}" y2="${h}" stroke="var(--line)"/></svg>`
+}
+function renderStats(){
+  const sid=$('#sstop').value||'all',kind=$('#stype').value,late=+$('#late').value*60,early=+$('#early').value*60,bus=$('#bus').checked,now=Date.now();
+  const recs=Object.values(stats).filter(r=>r.k===kind&&(sid==='all'||r.a===sid)&&(!bus||r.m==='BUS')&&new Date(r.sc).getTime()+r.dl*1000<now);
+  const real=recs.filter(r=>!r.c),n=real.length,cancel=recs.length-n;
+  const cls=r=>r.dl>late?'l':r.dl<-early?'e':'o';
+  const cnt={e:0,o:0,l:0};real.forEach(r=>cnt[cls(r)]++);
+  const avg=n?real.reduce((a,r)=>a+r.dl,0)/n/60:0;
+  $('#cards').innerHTML=[['Antal turer',n],['I tid',n?Math.round(cnt.o/n*100)+' %':'–'],['Sena',n?Math.round(cnt.l/n*100)+' %':'–'],['Tidiga',n?Math.round(cnt.e/n*100)+' %':'–'],['Snitt avvikelse',n?(avg>0?'+':'')+avg.toFixed(1)+' min':'–'],['Inställda',cancel]].map(([a,b])=>`<div class="card"><span class="muted">${a}</span><b>${b}</b></div>`).join('');
+  const hrs=Array.from({length:24},()=>({e:0,o:0,l:0}));
+  real.forEach(r=>hrs[+r.sc.slice(11,13)][cls(r)]++);
+  $('#chart').innerHTML=n?bar(720,160,hrs):'<p class="muted">Ingen data än. Låt sidan vara öppen så byggs statistiken upp.</p>';
+  const by={};recs.forEach(r=>{(by[r.l]??={n:0,o:0,sum:0,c:0});if(r.c)by[r.l].c++;else{by[r.l].n++;by[r.l].sum+=r.dl;if(cls(r)==='o')by[r.l].o++}});
+  $('#lrows').innerHTML=Object.entries(by).sort((a,b)=>b[1].n-a[1].n).map(([l,v])=>`<tr><td><span class="line">${esc(l)}</span></td><td>${v.n}</td><td>${v.n?Math.round(v.o/v.n*100)+' %':'–'}</td><td>${v.n?(v.sum/v.n/60).toFixed(1)+' min':'–'}</td><td>${v.c}</td></tr>`).join('')||'<tr><td colspan="5" class="muted">Ingen data än.</td></tr>';
+}
+['sstop','stype','late','early'].forEach(id=>$('#'+id).addEventListener('input',renderStats));
+$('#clear').onclick=()=>{if(confirm('Ta bort all sparad statistik?')){stats={};LS.set('bt_stats',stats);renderStats()}};
+$('#export').onclick=()=>{const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([JSON.stringify(stats,null,1)],{type:'application/json'}));a.download='busstider-statistik.json';a.click()};
+
+/* ---------- karta + enkel protobuf-läsare för GTFS-RT ---------- */
+let DV;
+function vi(b,p){let r=0,m=1,x;do{x=b[p++];r+=(x&127)*m;m*=128}while(x&128);return[r,p]}
+function fields(b,s,e){const o=[];let p=s;while(p<e){let t;[t,p]=vi(b,p);const f=Math.floor(t/8),w=t%8;
+  if(w===0){let v;[v,p]=vi(b,p);o.push({f,v})}
+  else if(w===2){let l;[l,p]=vi(b,p);o.push({f,s:p,e:p+l});p+=l}
+  else if(w===5){o.push({f,v:DV.getFloat32(p,true)});p+=4}
+  else if(w===1){p+=8}else break}return o}
+function parseVehicles(buf){
+  const b=new Uint8Array(buf);DV=new DataView(buf);const td=new TextDecoder(),out=[];
+  for(const ent of fields(b,0,b.length)){if(ent.f!==2)continue;
+    for(const v of fields(b,ent.s,ent.e)){if(v.f!==4)continue;
+      const veh={};
+      for(const x of fields(b,v.s,v.e)){
+        if(x.f===1)for(const y of fields(b,x.s,x.e)){if(y.f===1)veh.trip=td.decode(b.subarray(y.s,y.e))}
+        else if(x.f===2)for(const y of fields(b,x.s,x.e)){if(y.f===1)veh.lat=y.v;if(y.f===2)veh.lon=y.v}
+        else if(x.f===5)veh.ts=x.v
+        else if(x.f===8)for(const y of fields(b,x.s,x.e)){if(y.f===2)veh.label=td.decode(b.subarray(y.s,y.e))}}
+      if(veh.lat!=null&&veh.lon!=null)out.push(veh)}}
+  return out}
+function initMap(){
+  if(mapReady)return;mapReady=true;
+  map=L.map('map').setView([59.38,13.5],12);
+  L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19,attribution:'© OpenStreetMap'}).addTo(map);
+  stopLayer=L.layerGroup().addTo(map);busLayer=L.layerGroup().addTo(map);drawStops();
+}
+function drawStops(){
+  stopLayer.clearLayers();const pts=[];
+  for(const s of stops){const c=cache[s.id];(c?.dep?.stops||[]).forEach(p=>{if(p.lat){L.circleMarker([p.lat,p.lon],{radius:6,color:'#14231f',weight:2,fillColor:'#ffd24a',fillOpacity:1}).bindTooltip(p.name).addTo(stopLayer);pts.push([p.lat,p.lon])}})}
+  if(pts.length&&!busLayer.getLayers().length)map.fitBounds(pts,{padding:[40,40],maxZoom:15})
+}
+function tripInfo(){const m={};for(const s of stops){const c=cache[s.id];if(!c)continue;
+  [...(c.dep.departures||[]),...(c.arr.arrivals||[])].forEach(x=>{m[x.trip.trip_id]={l:x.route.designation||x.route.name,d:x.route.direction}})}return m}
+async function drawMap(){
+  if(!mapReady)return;drawStops();
+  if(!cfg.gkey){$('#mstat').textContent='Lägg in GTFS-RT-nyckel under Inställningar för att se bussar.';return}
+  try{
+    $('#mstat').textContent='Hämtar positioner…';
+    const raw=`https://opendata.samtrafiken.se/gtfs-rt-sweden/${encodeURIComponent(cfg.op)}/VehiclePositionsSweden.pb?key=${cfg.gkey}`;
+    const r=await fetch(cfg.proxy?cfg.proxy+encodeURIComponent(raw):raw);
+    if(!r.ok)throw new Error('HTTP '+r.status);
+    const veh=parseVehicles(await r.arrayBuffer()),info=tripInfo(),only=$('#onlyboard').checked;
+    busLayer.clearLayers();let n=0;
+    for(const v of veh){const i=info[v.trip];if(only&&!i)continue;n++;
+      L.marker([v.lat,v.lon],{icon:L.divIcon({className:'',html:`<div class="bus">${esc(i?.l||'•')}</div>`,iconSize:null}),title:i?`Linje ${i.l} mot ${i.d}`:'Buss'}).bindTooltip(i?`Linje ${esc(i.l)} mot ${esc(i.d)}`:esc(v.label||'Okänd tur')).addTo(busLayer)}
+    $('#mstat').textContent=`${n} bussar, uppdaterad ${new Date().toLocaleTimeString('sv-SE')}`;
+  }catch(e){$('#mstat').textContent=`Kunde inte hämta positioner (${e.message}). Om det är ett CORS-fel behövs ett proxy-prefix under Inställningar.`}
+}
+$('#mrefresh').onclick=drawMap;$('#onlyboard').onchange=drawMap;
+$('#print').onclick=()=>{map.invalidateSize();setTimeout(()=>window.print(),300)};
+
+/* ---------- flikar och start ---------- */
+document.querySelectorAll('.tabs button').forEach(b=>b.onclick=()=>{
+  document.querySelectorAll('.tabs button').forEach(x=>x.setAttribute('aria-selected',x===b));
+  document.querySelectorAll('.view').forEach(v=>v.hidden=v.id!=='v-'+b.dataset.v);
+  clearInterval(mtimer);
+  if(b.dataset.v==='map'){initMap();setTimeout(()=>{map.invalidateSize();drawMap()},50);mtimer=setInterval(()=>{if($('#auto').checked)drawMap()},30000)}
+  if(b.dataset.v==='stats')renderStats()});
+['type','bus'].forEach(id=>$('#'+id).addEventListener('change',()=>{renderBoard();renderStats()}));
+$('#refresh').onclick=refreshAll;
+loadCfg();renderChips();renderBoard();renderStats();
+if(!cfg.key)$('#settings').open=true;
+refreshAll();setInterval(refreshAll,60000);
+</script>
 </body>
 </html>
