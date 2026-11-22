@@ -63,6 +63,8 @@ footer{max-width:980px;margin:0 auto;padding:0 16px 24px}
 <input id="op" type="text" placeholder="varm">
 <label for="px">Proxy-prefix för kartdata (valfritt, används om webbläsaren blockerar anropet)</label>
 <input id="px" type="text" placeholder="https://din-worker.example.workers.dev/?url=">
+<label for="rp">GitHub-repo med insamlad statistik (ägare/namn, måste vara publikt)</label>
+<input id="rp" type="text" placeholder="BAMMIT/Busstider">
 <div class="row" style="margin-top:12px"><button class="pri" id="save">Spara</button><span class="muted">Nycklarna sparas bara i den här webbläsaren.</span></div>
 </details>
 
@@ -91,12 +93,13 @@ footer{max-width:980px;margin:0 auto;padding:0 16px 24px}
 
 <section class="view" id="v-stats" hidden>
 <div class="row noprint" style="margin-bottom:12px">
-<select id="sstop" aria-label="Hållplats"></select>
+<select id="sstop" aria-label="Hållplats"><option value="all">Alla hållplatser</option></select>
 <select id="stype" aria-label="Typ"><option value="d">Avgångar</option><option value="a">Ankomster</option></select>
 <label class="row" style="margin:0">Sen efter <input id="late" type="number" value="3" min="0" style="width:4.5em"> min</label>
 <label class="row" style="margin:0">Tidig före <input id="early" type="number" value="1" min="0" style="width:4.5em"> min</label>
 <button id="export">Exportera JSON</button>
-<button id="clear">Rensa statistik</button>
+<select id="days" aria-label="Period"><option value="7">7 dagar</option><option value="14" selected>14 dagar</option><option value="30">30 dagar</option></select>
+<button id="cfgcopy">Kopiera hållplatser till insamlaren</button>
 </div>
 <div class="cards" id="cards"></div>
 <div class="panel">
@@ -106,38 +109,42 @@ footer{max-width:980px;margin:0 auto;padding:0 16px 24px}
 </div>
 <div class="panel scroll"><strong>Per linje</strong>
 <table><thead><tr><th>Linje</th><th>Turer</th><th>I tid</th><th>Snitt avvikelse</th><th>Inställda</th></tr></thead><tbody id="lrows"></tbody></table></div>
-<p class="muted">Statistiken samlas in medan sidan är öppen: sidan hämtar tavlan för alla valda hållplatser en gång i minuten och sparar sista kända avvikelse för varje tur. Bara turer med realtidsdata räknas.</p>
+<p class="muted" id="sinfo"></p>
+<p class="muted">Statistiken samlas in av en GitHub Action som sparar sista kända avvikelse för varje tur. Bara turer med realtidsdata räknas, och avvikelsen är den som var känd någon minut före avgång eller ankomst.</p>
 </section>
 
 <section class="view" id="v-map" hidden>
 <div class="row noprint" style="margin-bottom:10px">
+<select id="mline" aria-label="Linje"><option value="">Alla linjer</option></select>
+<select id="mstyle" aria-label="Kartstil"><option value="simple">Enkel karta</option><option value="minimal">Utan etiketter</option><option value="detailed">Detaljerad karta</option></select>
 <label class="row" style="margin:0"><input type="checkbox" id="onlyboard" checked> Bara bussar som syns på tavlan</label>
 <label class="row" style="margin:0"><input type="checkbox" id="auto" checked> Uppdatera var 30:e sekund</label>
 <button id="mrefresh">Hämta positioner</button>
 <button class="pri" id="print">Skriv ut kartan</button>
 <span class="muted" id="mstat"></span>
 </div>
+<p class="muted" id="lstat"></p>
 <div id="map" role="img" aria-label="Karta med bussarnas positioner"></div>
 </section>
 </main>
-<footer class="muted">Data från Trafiklab.se, licens CC BY 4.0. Kartdata © OpenStreetMap.</footer>
+<footer class="muted">Data från Trafiklab.se, licens CC BY 4.0. Kartdata © OpenStreetMap-bidragsgivare, kartstil © CARTO.</footer>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.js"></script>
 <script>
 const $=s=>document.querySelector(s);
 const API='https://realtime-api.trafiklab.se/v1';
 const LS={get(k,d){try{const v=localStorage.getItem(k);return v?JSON.parse(v):d}catch(e){return d}},set(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){console.warn(e)}}};
-let cfg=Object.assign({key:'',gkey:'',op:'varm',proxy:''},LS.get('bt_cfg',{}));
+let cfg=Object.assign({key:'',gkey:'',op:'varm',proxy:'',repo:'BAMMIT/Busstider'},LS.get('bt_cfg',{}));
 let stops=LS.get('bt_stops',[]);
-let stats=LS.get('bt_stats',{});
-let cache={},cur=null,mapReady=false,map,stopLayer,busLayer,mtimer;
+let stats={},shapes={},lineTok=0;
+let cache={},cur=null,mapReady=false,map,baseLayer,lineLayer,stopLayer,busLayer,mtimer;
 const esc=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const hhmm=iso=>iso?iso.slice(11,16):'';
 const setStatus=t=>{$('#status').textContent=t};
 
 /* ---------- inställningar ---------- */
-function loadCfg(){$('#k1').value=cfg.key;$('#k2').value=cfg.gkey;$('#op').value=cfg.op;$('#px').value=cfg.proxy}
-$('#save').onclick=()=>{cfg={key:$('#k1').value.trim(),gkey:$('#k2').value.trim(),op:$('#op').value.trim()||'varm',proxy:$('#px').value.trim()};LS.set('bt_cfg',cfg);setStatus('Inställningar sparade');refreshAll()};
+function loadCfg(){$('#k1').value=cfg.key;$('#k2').value=cfg.gkey;$('#op').value=cfg.op;$('#px').value=cfg.proxy;$('#rp').value=cfg.repo}
+$('#save').onclick=()=>{cfg={key:$('#k1').value.trim(),gkey:$('#k2').value.trim(),op:$('#op').value.trim()||'varm',proxy:$('#px').value.trim(),repo:$('#rp').value.trim()};LS.set('bt_cfg',cfg);setStatus('Inställningar sparade');refreshAll();loadStats()};
 async function getJSON(url){const r=await fetch(url);if(!r.ok)throw new Error('HTTP '+r.status);return r.json()}
 
 /* ---------- hållplatser ---------- */
@@ -153,19 +160,18 @@ $('#sform').onsubmit=async e=>{
   }catch(err){$('#results').innerHTML=`<div class="msg bad">Sökningen misslyckades (${esc(err.message)}). Kontrollera nyckeln.</div>`}
 };
 function addStop(id,name){if(!stops.find(s=>s.id===id))stops.push({id,name});LS.set('bt_stops',stops);cur=id;renderChips();refreshAll()}
-function removeStop(id){stops=stops.filter(s=>s.id!==id);LS.set('bt_stops',stops);if(cur===id)cur=stops[0]?.id||null;renderChips();renderBoard();renderStats();drawMap()}
+function removeStop(id){stops=stops.filter(s=>s.id!==id);LS.set('bt_stops',stops);if(cur===id)cur=stops[0]?.id||null;renderChips();renderBoard();fillLines();drawMap()}
 function renderChips(){
   if(!cur&&stops[0])cur=stops[0].id;
   $('#chips').innerHTML=stops.map(s=>`<span class="chip ${s.id===cur?'sel':''}"><span data-sel="${esc(s.id)}" style="cursor:pointer">${esc(s.name)}</span><button data-rm="${esc(s.id)}" aria-label="Ta bort ${esc(s.name)}">×</button></span>`).join('');
   $('#chips').querySelectorAll('[data-sel]').forEach(e=>e.onclick=()=>{cur=e.dataset.sel;renderChips();renderBoard()});
   $('#chips').querySelectorAll('[data-rm]').forEach(e=>e.onclick=()=>removeStop(e.dataset.rm));
-  $('#sstop').innerHTML='<option value="all">Alla hållplatser</option>'+stops.map(s=>`<option value="${esc(s.id)}">${esc(s.name)}</option>`).join('');
 }
 
 /* ---------- hämta och tavla ---------- */
 async function fetchStop(s){
   const [dep,arr]=await Promise.all([getJSON(`${API}/departures/${s.id}?key=${cfg.key}`),getJSON(`${API}/arrivals/${s.id}?key=${cfg.key}`)]);
-  cache[s.id]={dep,arr,ts:new Date()};record(s.id,dep.departures||[],'d');record(s.id,arr.arrivals||[],'a');
+  cache[s.id]={dep,arr,ts:new Date()};
 }
 async function refreshAll(){
   if(!cfg.key||!stops.length){renderBoard();return}
@@ -173,7 +179,7 @@ async function refreshAll(){
   const res=await Promise.allSettled(stops.map(fetchStop));
   const fail=res.filter(r=>r.status==='rejected');
   setStatus(fail.length?`Fel vid hämtning: ${fail[0].reason.message}`:'Uppdaterad '+new Date().toLocaleTimeString('sv-SE',{hour:'2-digit',minute:'2-digit'}));
-  prune();LS.set('bt_stats',stats);renderBoard();renderStats();if(mapReady)drawStops();
+  renderBoard();fillLines();if(mapReady)drawStops();
 }
 function fmtDelay(s,rt,c){
   if(c)return'<span class="bad">Inställd</span>';
@@ -197,14 +203,24 @@ function renderBoard(){
 }
 
 /* ---------- statistik ---------- */
-function record(stopId,list,kind){
-  for(const x of list){
-    if(!x.is_realtime&&!x.canceled)continue;
-    const k=[kind,x.trip.trip_id,x.trip.start_date,x.stop.id].join('|');
-    stats[k]={k:kind,l:x.route.designation||x.route.name||'?',s:x.stop.name,a:stopId,sc:x.scheduled,dl:x.delay,c:x.canceled?1:0,m:x.route.transport_mode}
-  }
+async function loadStats(){
+  const info=$('#sinfo');
+  if(!/^[\w.-]+\/[\w.-]+$/.test(cfg.repo||'')){info.textContent='Ange repo som ägare/namn under Inställningar.';return}
+  info.textContent='Hämtar statistik…';
+  const base=`https://raw.githubusercontent.com/${cfg.repo}/data/data/`,bust='?t='+Math.floor(Date.now()/3e5);
+  try{
+    const idx=await getJSON(base+'index.json'+bust);
+    const want=(idx.days||[]).slice(-$('#days').value);
+    const parts=await Promise.all(want.map(d=>getJSON(base+d+'.json'+bust)));
+    stats={};parts.forEach(p=>Object.assign(stats,p));
+    const m={};Object.values(stats).forEach(r=>{m[r.a]=r.an||r.s});
+    const sel=$('#sstop'),prev=sel.value;
+    sel.innerHTML='<option value="all">Alla hållplatser</option>'+Object.entries(m).map(([id,n])=>`<option value="${esc(id)}">${esc(n)}</option>`).join('');
+    if(m[prev])sel.value=prev;
+    info.textContent=`${Object.keys(stats).length} turer från ${want.length} dagar. Senast uppdaterad ${idx.updated?new Date(idx.updated).toLocaleString('sv-SE'):'okänt'}.`;
+  }catch(e){stats={};info.textContent=`Hittade ingen statistik (${e.message}). Kontrollera repo-namnet och att Actionen har körts minst en gång.`}
+  renderStats();
 }
-function prune(){const lim=Date.now()-30*864e5;for(const k in stats)if(new Date(stats[k].sc).getTime()<lim)delete stats[k]}
 function bar(w,h,rows){
   const bw=w/24,mx=Math.max(1,...rows.map(r=>r.e+r.o+r.l));let out=`<svg viewBox="0 0 ${w} ${h+22}" width="100%" role="img" aria-label="Stapeldiagram över punktlighet per timme">`;
   rows.forEach((r,i)=>{const tot=r.e+r.o+r.l;let y=h;const x=i*bw+2;
@@ -222,12 +238,13 @@ function renderStats(){
   $('#cards').innerHTML=[['Antal turer',n],['I tid',n?Math.round(cnt.o/n*100)+' %':'–'],['Sena',n?Math.round(cnt.l/n*100)+' %':'–'],['Tidiga',n?Math.round(cnt.e/n*100)+' %':'–'],['Snitt avvikelse',n?(avg>0?'+':'')+avg.toFixed(1)+' min':'–'],['Inställda',cancel]].map(([a,b])=>`<div class="card"><span class="muted">${a}</span><b>${b}</b></div>`).join('');
   const hrs=Array.from({length:24},()=>({e:0,o:0,l:0}));
   real.forEach(r=>hrs[+r.sc.slice(11,13)][cls(r)]++);
-  $('#chart').innerHTML=n?bar(720,160,hrs):'<p class="muted">Ingen data än. Låt sidan vara öppen så byggs statistiken upp.</p>';
+  $('#chart').innerHTML=n?bar(720,160,hrs):'<p class="muted">Ingen data för urvalet än.</p>';
   const by={};recs.forEach(r=>{(by[r.l]??={n:0,o:0,sum:0,c:0});if(r.c)by[r.l].c++;else{by[r.l].n++;by[r.l].sum+=r.dl;if(cls(r)==='o')by[r.l].o++}});
   $('#lrows').innerHTML=Object.entries(by).sort((a,b)=>b[1].n-a[1].n).map(([l,v])=>`<tr><td><span class="line">${esc(l)}</span></td><td>${v.n}</td><td>${v.n?Math.round(v.o/v.n*100)+' %':'–'}</td><td>${v.n?(v.sum/v.n/60).toFixed(1)+' min':'–'}</td><td>${v.c}</td></tr>`).join('')||'<tr><td colspan="5" class="muted">Ingen data än.</td></tr>';
 }
 ['sstop','stype','late','early'].forEach(id=>$('#'+id).addEventListener('input',renderStats));
-$('#clear').onclick=()=>{if(confirm('Ta bort all sparad statistik?')){stats={};LS.set('bt_stats',stats);renderStats()}};
+$('#days').onchange=loadStats;
+$('#cfgcopy').onclick=async()=>{const t=JSON.stringify({busOnly:true,quietHours:[1,4],stops:stops.map(x=>({id:x.id,name:x.name}))},null,2);try{await navigator.clipboard.writeText(t);$('#sinfo').textContent='Kopierat. Klistra in i collector/config.json i repot.'}catch(e){prompt('Kopiera till collector/config.json:',t)}};
 $('#export').onclick=()=>{const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([JSON.stringify(stats,null,1)],{type:'application/json'}));a.download='busstider-statistik.json';a.click()};
 
 /* ---------- karta + enkel protobuf-läsare för GTFS-RT ---------- */
@@ -250,19 +267,64 @@ function parseVehicles(buf){
         else if(x.f===8)for(const y of fields(b,x.s,x.e)){if(y.f===2)veh.label=td.decode(b.subarray(y.s,y.e))}}
       if(veh.lat!=null&&veh.lon!=null)out.push(veh)}}
   return out}
+const TILES={
+  simple:'https://{s}.basemaps.cartocdn.com/{v}_all/{z}/{x}/{y}{r}.png',
+  minimal:'https://{s}.basemaps.cartocdn.com/{v}_nolabels/{z}/{x}/{y}{r}.png',
+  detailed:'https://tile.openstreetmap.org/{z}/{x}/{y}.png'};
+const ATTR={simple:'© OpenStreetMap-bidragsgivare © CARTO',minimal:'© OpenStreetMap-bidragsgivare © CARTO',detailed:'© OpenStreetMap'};
+const isDark=()=>matchMedia('(prefers-color-scheme: dark)').matches;
+function setBase(style,forceLight){
+  if(baseLayer)map.removeLayer(baseLayer);
+  baseLayer=L.tileLayer(TILES[style],{subdomains:'abcd',v:(isDark()&&!forceLight)?'dark':'light',maxZoom:19,attribution:ATTR[style]}).addTo(map);
+  baseLayer.bringToBack();
+}
 function initMap(){
   if(mapReady)return;mapReady=true;
   map=L.map('map').setView([59.38,13.5],12);
-  L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19,attribution:'© OpenStreetMap'}).addTo(map);
-  stopLayer=L.layerGroup().addTo(map);busLayer=L.layerGroup().addTo(map);drawStops();
+  const st=LS.get('bt_mstyle','simple');$('#mstyle').value=TILES[st]?st:'simple';setBase($('#mstyle').value);
+  lineLayer=L.layerGroup().addTo(map);stopLayer=L.layerGroup().addTo(map);busLayer=L.layerGroup().addTo(map);
+  fillLines();drawStops();
+}
+function allCalls(){const a=[];for(const s of stops){const c=cache[s.id];if(c)a.push(...(c.dep.departures||[]),...(c.arr.arrivals||[]))}return a}
+const lineOf=x=>x.route.designation||x.route.name;
+function fillLines(){
+  const sel=$('#mline'),prev=sel.value;
+  const ls=[...new Set(allCalls().filter(x=>x.route.transport_mode==='BUS').map(lineOf).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'sv',{numeric:true}));
+  sel.innerHTML='<option value="">Alla linjer</option>'+ls.map(l=>`<option>${esc(l)}</option>`).join('');
+  if(ls.includes(prev))sel.value=prev;
 }
 function drawStops(){
   stopLayer.clearLayers();const pts=[];
-  for(const s of stops){const c=cache[s.id];(c?.dep?.stops||[]).forEach(p=>{if(p.lat){L.circleMarker([p.lat,p.lon],{radius:6,color:'#14231f',weight:2,fillColor:'#ffd24a',fillOpacity:1}).bindTooltip(p.name).addTo(stopLayer);pts.push([p.lat,p.lon])}})}
-  if(pts.length&&!busLayer.getLayers().length)map.fitBounds(pts,{padding:[40,40],maxZoom:15})
+  for(const s of stops){const c=cache[s.id];(c?.dep?.stops||[]).forEach(p=>{if(p.lat){L.circleMarker([p.lat,p.lon],{radius:7,color:'#14231f',weight:2,fillColor:'#ffd24a',fillOpacity:1}).bindTooltip(p.name).addTo(stopLayer);pts.push([p.lat,p.lon])}})}
+  if(pts.length&&!$('#mline').value&&!busLayer.getLayers().length)map.fitBounds(pts,{padding:[40,40],maxZoom:15})
 }
-function tripInfo(){const m={};for(const s of stops){const c=cache[s.id];if(!c)continue;
-  [...(c.dep.departures||[]),...(c.arr.arrivals||[])].forEach(x=>{m[x.trip.trip_id]={l:x.route.designation||x.route.name,d:x.route.direction}})}return m}
+const COLORS=['#d9480f','#1c7ed6','#7048e8','#2b8a3e'];
+async function drawLine(fit){
+  const tok=++lineTok;lineLayer.clearLayers();const out=$('#lstat');out.textContent='';
+  const line=$('#mline').value;if(!line)return;
+  if(!cfg.key){out.textContent='API-nyckel saknas.';return}
+  const groups={};
+  allCalls().filter(x=>lineOf(x)===line).sort((a,b)=>a.scheduled.localeCompare(b.scheduled)).forEach(x=>{const g=x.route.destination?.id||x.route.direction;if(!groups[g]&&Object.keys(groups).length<4)groups[g]=x});
+  const ids=Object.keys(groups);
+  if(!ids.length){out.textContent=`Linje ${line} finns inte på tavlorna just nu.`;return}
+  out.textContent='Hämtar linjens hållplatser…';
+  const bounds=[],legend=[];
+  for(const [i,g] of ids.entries()){
+    const x=groups[g],key=line+'|'+g,col=COLORS[i%COLORS.length];
+    try{
+      if(!shapes[key]){const t=await getJSON(`${API}/trips/${encodeURIComponent(x.trip.trip_id)}/${x.trip.start_date}?key=${cfg.key}`);shapes[key]=t.calls||[]}
+      if(tok!==lineTok)return;
+      const pts=shapes[key].filter(c=>c.stop?.lat).map(c=>({p:[c.stop.lat,c.stop.lon],n:c.stop.name,t:hhmm(c.scheduledDeparture||c.scheduledArrival)}));
+      L.polyline(pts.map(q=>q.p),{color:col,weight:4,opacity:.85}).addTo(lineLayer);
+      pts.forEach((q,j)=>L.circleMarker(q.p,{radius:(j===0||j===pts.length-1)?7:5,color:col,weight:3,fillColor:'#fff',fillOpacity:1}).bindTooltip(`${q.n} ${q.t}`).addTo(lineLayer));
+      bounds.push(...pts.map(q=>q.p));
+      legend.push(`<span style="color:${col}">■</span> mot ${esc(x.route.destination?.name||x.route.direction)} (${pts.length} hållplatser)`);
+    }catch(e){if(tok===lineTok)out.textContent=`Kunde inte hämta hållplatserna för linje ${line} (${e.message}).`;return}
+  }
+  out.innerHTML=`Linje ${esc(line)}: ${legend.join(' &nbsp; ')}. <span class="muted">Raka streck mellan hållplatserna, inte vägens sträckning.</span>`;
+  if(fit&&bounds.length)map.fitBounds(bounds,{padding:[40,40]});
+}
+function tripInfo(){const m={};allCalls().forEach(x=>{m[x.trip.trip_id]={l:lineOf(x),d:x.route.direction}});return m}
 async function drawMap(){
   if(!mapReady)return;drawStops();
   if(!cfg.gkey){$('#mstat').textContent='Lägg in GTFS-RT-nyckel under Inställningar för att se bussar.';return}
@@ -271,28 +333,37 @@ async function drawMap(){
     const raw=`https://opendata.samtrafiken.se/gtfs-rt-sweden/${encodeURIComponent(cfg.op)}/VehiclePositionsSweden.pb?key=${cfg.gkey}`;
     const r=await fetch(cfg.proxy?cfg.proxy+encodeURIComponent(raw):raw);
     if(!r.ok)throw new Error('HTTP '+r.status);
-    const veh=parseVehicles(await r.arrayBuffer()),info=tripInfo(),only=$('#onlyboard').checked;
+    const veh=parseVehicles(await r.arrayBuffer()),info=tripInfo(),only=$('#onlyboard').checked,line=$('#mline').value;
     busLayer.clearLayers();let n=0;
-    for(const v of veh){const i=info[v.trip];if(only&&!i)continue;n++;
+    for(const v of veh){const i=info[v.trip];
+      if(line){if(i?.l!==line)continue}else if(only&&!i)continue;
+      n++;
       L.marker([v.lat,v.lon],{icon:L.divIcon({className:'',html:`<div class="bus">${esc(i?.l||'•')}</div>`,iconSize:null}),title:i?`Linje ${i.l} mot ${i.d}`:'Buss'}).bindTooltip(i?`Linje ${esc(i.l)} mot ${esc(i.d)}`:esc(v.label||'Okänd tur')).addTo(busLayer)}
     $('#mstat').textContent=`${n} bussar, uppdaterad ${new Date().toLocaleTimeString('sv-SE')}`;
   }catch(e){$('#mstat').textContent=`Kunde inte hämta positioner (${e.message}). Om det är ett CORS-fel behövs ett proxy-prefix under Inställningar.`}
 }
 $('#mrefresh').onclick=drawMap;$('#onlyboard').onchange=drawMap;
-$('#print').onclick=()=>{map.invalidateSize();setTimeout(()=>window.print(),300)};
+$('#mline').onchange=()=>{drawLine(true);drawMap()};
+$('#mstyle').onchange=e=>{LS.set('bt_mstyle',e.target.value);setBase(e.target.value)};
+$('#print').onclick=()=>{
+  setBase($('#mstyle').value,true);map.invalidateSize();
+  let done=false;const go=()=>{if(!done){done=true;window.print()}};
+  baseLayer.once('load',()=>setTimeout(go,200));setTimeout(go,2500);
+};
+window.addEventListener('afterprint',()=>{if(mapReady)setBase($('#mstyle').value)});
 
 /* ---------- flikar och start ---------- */
 document.querySelectorAll('.tabs button').forEach(b=>b.onclick=()=>{
   document.querySelectorAll('.tabs button').forEach(x=>x.setAttribute('aria-selected',x===b));
   document.querySelectorAll('.view').forEach(v=>v.hidden=v.id!=='v-'+b.dataset.v);
   clearInterval(mtimer);
-  if(b.dataset.v==='map'){initMap();setTimeout(()=>{map.invalidateSize();drawMap()},50);mtimer=setInterval(()=>{if($('#auto').checked)drawMap()},30000)}
-  if(b.dataset.v==='stats')renderStats()});
+  if(b.dataset.v==='map'){initMap();setTimeout(()=>{map.invalidateSize();fillLines();drawLine(true);drawMap()},50);mtimer=setInterval(()=>{if($('#auto').checked)drawMap()},30000)}
+  if(b.dataset.v==='stats')loadStats()});
 ['type','bus'].forEach(id=>$('#'+id).addEventListener('change',()=>{renderBoard();renderStats()}));
 $('#refresh').onclick=refreshAll;
 loadCfg();renderChips();renderBoard();renderStats();
 if(!cfg.key)$('#settings').open=true;
-refreshAll();setInterval(refreshAll,60000);
+refreshAll();setInterval(refreshAll,60000);loadStats();
 </script>
 </body>
 </html>
