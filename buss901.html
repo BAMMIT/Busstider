@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light">
+<title>Buss 901 mot Lövnäs</title>
+<style>
+:root{color-scheme:light;--ink:#000;--late:#c62828;--early:#1b7f3b;--mute:#5a5f5d;--line:#d4d8d6;--bg:#f4f6f3;--acc:#0f6b5c}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.4 system-ui,-apple-system,"Segoe UI",sans-serif}
+header{background:var(--acc);color:#fff;padding:14px 18px}
+header h1{margin:0;font-size:1.3rem}
+header p{margin:2px 0 0;font-size:.9rem;opacity:.9}
+header a{color:#fff}
+main{max-width:720px;margin:0 auto;padding:14px}
+.bar{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:12px}
+button,input{font:inherit;color:var(--ink);background:#fff;border:1px solid var(--line);border-radius:6px;padding:7px 12px}
+button{cursor:pointer}
+button:focus-visible,input:focus-visible,summary:focus-visible{outline:3px solid #f0a63a;outline-offset:1px}
+.mute{color:var(--mute);font-size:.88rem}
+.trip{background:#fff;border:1px solid var(--line);border-radius:10px;padding:14px 16px 12px;margin-bottom:12px}
+.cols{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}
+.cols>div:nth-child(2){text-align:center}
+.cols>div:nth-child(3){text-align:right}
+.t{display:block;font-size:clamp(1.55rem,7vw,2.3rem);font-weight:700;font-variant-numeric:tabular-nums;line-height:1.1}
+.nm{font-size:.82rem;color:var(--mute);margin-top:2px}
+.sub{font-size:.8rem;margin-top:2px}
+.ok{color:var(--ink)}.late{color:var(--late)}.early{color:var(--early)}.sub.mute{color:var(--mute)}
+.track{position:relative;height:36px;margin:12px 16px 0}
+.rail,.done{position:absolute;top:50%;height:4px;margin-top:-2px;border-radius:2px}
+.rail{left:0;right:0;background:var(--line)}
+.done{left:0;background:var(--ink)}
+.node{position:absolute;top:50%;width:14px;height:14px;margin:-7px 0 0 -7px;border-radius:50%;background:#fff;border:3px solid var(--ink)}
+.bus{position:absolute;top:50%;transform:translate(-50%,-50%);background:#fff;border-radius:8px;padding:2px;line-height:0;color:var(--ink)}
+.bus.dim{opacity:.45}
+.rail,.done,.bus{transition:left 1s linear,width 1s linear}
+.state{margin-top:6px;font-size:.9rem;text-align:center}
+.cancel .t{text-decoration:line-through;color:var(--mute)}
+.badge{display:inline-block;background:var(--late);color:#fff;border-radius:4px;padding:1px 8px;font-size:.85rem;margin-bottom:6px}
+.msg{padding:10px 12px;border:1px solid var(--line);border-radius:8px;background:#fff;margin:0 0 12px}
+details{background:#fff;border:1px solid var(--line);border-radius:8px;padding:10px 14px;margin-top:16px}
+summary{cursor:pointer;font-weight:600}
+label{display:block;margin:10px 0 3px;font-size:.85rem;color:var(--mute)}
+input[type=text],input[type=password]{width:100%}
+footer{max-width:720px;margin:0 auto;padding:0 14px 24px}
+</style>
+</head>
+<body>
+<header>
+<h1>Buss 901 mot Lövnäs</h1>
+<p>Karlstad Busstation, Inre Hamn och Bryggerivägen. <a href="webben.html">Alla hållplatser</a></p>
+</header>
+<main>
+<div class="bar">
+<button id="now" hidden>Tillbaka till nu</button>
+<button id="later">Visa nästa timme</button>
+<button id="reload">Uppdatera</button>
+<span class="mute" id="upd"></span>
+</div>
+<div id="msg"></div>
+<div id="list"></div>
+<details id="set">
+<summary>Inställningar</summary>
+<label for="key">Trafiklab Realtime API-nyckel (delas med övriga sidan)</label>
+<input id="key" type="password" autocomplete="off">
+<label for="oid">Hållplats-ID för Karlstad Busstation (lämna tomt för automatisk sökning)</label>
+<input id="oid" type="text">
+<p><button id="save">Spara</button></p>
+</details>
+</main>
+<footer class="mute">Data från Trafiklab.se, licens CC BY 4.0. Bussens plats är beräknad från tiderna, inte från GPS. Röd tid är senare än tidtabellen, grön är tidigare.</footer>
+
+<script>
+const $=s=>document.querySelector(s);
+const API='https://realtime-api.trafiklab.se/v1';
+const LSget=(k,d)=>{try{const v=localStorage.getItem(k);return v?JSON.parse(v):d}catch(e){return d}};
+const LSset=(k,v)=>{try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}};
+const norm=s=>String(s||'').toLowerCase();
+const esc=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const hhmm=iso=>iso?iso.slice(11,16):'–';
+const T=iso=>+new Date(iso);
+const isTrue=v=>v===true||v==='true';
+const minDiff=(sched,real)=>Math.floor(T(real)/6e4)-Math.floor(T(sched)/6e4);
+const cls=d=>d>0?'late':d<0?'early':'ok';
+const fmtD=d=>d===0?'i tid':(d>0?'+':'\u2212')+Math.abs(d)+' min';
+const p2=n=>String(n).padStart(2,'0');
+const fmtQ=d=>`${d.getFullYear()}-${p2(d.getMonth()+1)}-${p2(d.getDate())}T${p2(d.getHours())}:${p2(d.getMinutes())}`;
+let cfg=LSget('bt_cfg',{}),mine=LSget('bt_901',{}),trips=[],offset=0,origin=null;
+
+async function getJSON(url){const r=await fetch(url);if(!r.ok)throw new Error('HTTP '+r.status);return r.json()}
+
+async function resolveOrigin(){
+  if(mine.manualId)return{id:mine.manualId,name:'Karlstad Busstation'};
+  if(mine.id)return mine;
+  const d=await getJSON(`${API}/stops/name/${encodeURIComponent('Karlstad Busstation')}?key=${cfg.key}`);
+  const g=d.stop_groups||[];
+  const hit=g.find(x=>norm(x.name).includes('karlstad')&&norm(x.name).includes('busstation'))||g.find(x=>norm(x.name).includes('busstation'));
+  if(!hit)throw new Error('Hittade ingen hållplats som heter Karlstad Busstation. Ange hållplats-ID under Inställningar.');
+  mine={id:hit.id,name:hit.name};LSset('bt_901',mine);return mine;
+}
+
+function build(x,calls){
+  const nm=c=>norm(c.stop&&c.stop.name);
+  let o=calls.findIndex(c=>c.stop&&c.stop.area_id===origin.id);
+  if(o<0)o=calls.findIndex(c=>nm(c).includes('busstation'));
+  const m=calls.findIndex((c,i)=>i>o&&nm(c).includes('inre hamn'));
+  const d=calls.findIndex((c,i)=>i>o&&nm(c).includes('bryggerivägen'));
+  return{x,calls,o,m,d};
+}
+
+async function load(){
+  $('#msg').innerHTML='';
+  if(!cfg.key){$('#msg').innerHTML='<p class="msg">Ange din API-nyckel under Inställningar.</p>';$('#set').open=true;return}
+  try{
+    origin=await resolveOrigin();
+    const q=offset?'/'+fmtQ(new Date(Date.now()+offset*6e4)):'';
+    const d=await getJSON(`${API}/departures/${origin.id}${q}?key=${cfg.key}`);
+    const list=(d.departures||[]).filter(x=>(x.route.designation||'')==='901'&&norm((x.route.destination&&x.route.destination.name||'')+' '+(x.route.direction||'')).includes('lövnäs'));
+    trips=await Promise.all(list.map(async x=>{
+      try{const t=await getJSON(`${API}/trips/${encodeURIComponent(x.trip.trip_id)}/${x.trip.start_date}?key=${cfg.key}`);return build(x,t.calls||[])}
+      catch(e){return{x,err:`Kunde inte hämta turen ${hhmm(x.scheduled)} (${e.message}).`}}
+    }));
+    $('#upd').textContent='Uppdaterad '+new Date().toLocaleTimeString('sv-SE');
+  }catch(e){trips=[];$('#msg').innerHTML=`<p class="msg">${esc(e.message)}</p>`}
+  $('#now').hidden=!offset;
+  render();
+}
+
+function posIndex(calls,now){
+  const A=calls.map(c=>T(c.realtimeArrival||c.realtimeDeparture)),D=calls.map(c=>T(c.realtimeDeparture||c.realtimeArrival));
+  if(now<=A[0])return 0;
+  for(let k=0;k<calls.length;k++){
+    if(now>=A[k]&&now<=D[k])return k;
+    if(k+1<calls.length&&now>D[k]&&now<A[k+1])return k+(now-D[k])/(A[k+1]-D[k]);
+  }
+  return calls.length-1;
+}
+const xOf=(p,o,m,d)=>p<=o?0:p<=m?.5*(p-o)/(m-o):p<=d?.5+.5*(p-m)/(d-m):1;
+const BUS='<svg viewBox="0 0 24 24" width="28" height="28" role="img" aria-label="Buss"><rect x="3" y="3" width="18" height="15" rx="3" fill="currentColor"/><rect x="5.5" y="5.5" width="13" height="6" rx="1" fill="#fff"/><circle cx="8" cy="15" r="1.3" fill="#fff"/><circle cx="16" cy="15" r="1.3" fill="#fff"/><rect x="5" y="18" width="3" height="3" rx="1" fill="currentColor"/><rect x="16" y="18" width="3" height="3" rx="1" fill="currentColor"/></svg>';
+const col=(label,big,c,sub,sc)=>`<div><b class="t ${c}">${big}</b><div class="nm">${esc(label)}</div><div class="sub ${sc}">${sub}</div></div>`;
+
+function card(t,now){
+  if(t.err)return`<article class="trip"><p class="msg" style="margin:0">${esc(t.err)}</p></article>`;
+  const{x,calls,o,m,d}=t;
+  if(o<0||m<0||d<0){
+    const miss=[o<0&&'Karlstad Busstation',m<0&&'Inre hamn',d<0&&'Bryggerivägen'].filter(Boolean).join(', ');
+    return`<article class="trip"><b>${hhmm(x.scheduled)}</b><p class="msg" style="margin:6px 0 0">Hittar inte ${esc(miss)} på turen. Hållplatser på turen: ${esc(calls.map(c=>c.stop&&c.stop.name).join(', '))}</p></article>`;
+  }
+  const co=calls[o],cm=calls[m],cd=calls[d];
+  const cancelled=isTrue(co.departureCanceled)||isTrue(cd.arrivalCanceled);
+  // kolumn 1: tidtabellens avgång från Busstationen
+  const d1=minDiff(co.scheduledDeparture,co.realtimeDeparture),r1=co.is_realtime;
+  const c1=col(co.stop.name,hhmm(co.scheduledDeparture),r1?cls(d1):'ok',!r1?'Ingen realtid':d1===0?'Beräknad: i tid':`Beräknad ${hhmm(co.realtimeDeparture)} \u00b7 ${fmtD(d1)}`,r1?cls(d1):'mute');
+  // kolumn 2: beräknad avgång Inre Hamn, tidtabellens tid om realtid saknas
+  const d2=minDiff(cm.scheduledDeparture,cm.realtimeDeparture),r2=cm.is_realtime;
+  const c2=col(cm.stop.name,hhmm(r2?cm.realtimeDeparture:cm.scheduledDeparture),r2?cls(d2):'ok',!r2?'Tidtabell':d2===0?`Plan ${hhmm(cm.scheduledDeparture)} \u00b7 i tid`:`Plan ${hhmm(cm.scheduledDeparture)} \u00b7 ${fmtD(d2)}`,r2?cls(d2):'mute');
+  // kolumn 3: beräknad ankomst Bryggerivägen
+  const d3=minDiff(cd.scheduledArrival,cd.realtimeArrival),r3=cd.is_realtime;
+  const c3=col(cd.stop.name,hhmm(r3?cd.realtimeArrival:cd.scheduledArrival),r3?cls(d3):'ok',!r3?'Tidtabell':d3===0?`Plan ${hhmm(cd.scheduledArrival)} \u00b7 i tid`:`Plan ${hhmm(cd.scheduledArrival)} \u00b7 ${fmtD(d3)}`,r3?cls(d3):'mute');
+  // bussens plats
+  const p=posIndex(calls,now),xp=xOf(p,o,m,d)*100,at=k=>Math.abs(p-k)<1e-9;
+  const depO=T(co.realtimeDeparture),anyRT=calls.some(c=>c.is_realtime);
+  let state,dim=false;
+  if(p<=o&&now<depO){const n=Math.round((depO-now)/6e4);state=n>=1?`Avgår om ${n} min`:'Avgår nu';dim=n>10}
+  else if(p<o)state=`På väg till ${co.stop.name}`;
+  else if(at(o))state=`Vid ${co.stop.name}`;
+  else if(p<m)state=`På väg mot ${cm.stop.name}`;
+  else if(at(m))state=`Vid ${cm.stop.name}`;
+  else if(p<d)state=`På väg mot ${cd.stop.name}`;
+  else state=`Framme vid ${cd.stop.name}`;
+  if(!anyRT)state+=' (beräknat från tidtabell)';
+  const track=cancelled?'':`<div class="track"><div class="rail"></div><div class="done" style="width:${xp}%"></div><i class="node" style="left:0"></i><i class="node" style="left:50%"></i><i class="node" style="left:100%"></i><span class="bus ${dim||!anyRT?'dim':''}" style="left:${xp}%">${BUS}</span></div><div class="state">${esc(state)}</div>`;
+  return`<article class="trip ${cancelled?'cancel':''}">${cancelled?'<span class="badge">Inställd</span>':''}<div class="cols">${c1}${c2}${c3}</div>${track}</article>`;
+}
+
+function render(){
+  const now=Date.now();
+  if(!trips.length){if(!$('#msg').innerHTML)$('#list').innerHTML='<p class="msg">Ingen tur på linje 901 mot Lövnäs från Karlstad Busstation den närmaste timmen. Prova "Visa nästa timme".</p>';else $('#list').innerHTML='';return}
+  $('#list').innerHTML=trips.map(t=>card(t,now)).join('');
+}
+
+$('#later').onclick=()=>{offset+=60;load()};
+$('#now').onclick=()=>{offset=0;load()};
+$('#reload').onclick=load;
+$('#save').onclick=()=>{
+  cfg=Object.assign({},cfg,{key:$('#key').value.trim()});LSset('bt_cfg',cfg);
+  const id=$('#oid').value.trim();mine=id?{manualId:id}:{};LSset('bt_901',mine);load()};
+$('#key').value=cfg.key||'';$('#oid').value=mine.manualId||'';
+load();setInterval(load,60000);setInterval(render,15000);
+</script>
+</body>
+</html>
